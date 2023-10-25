@@ -80,14 +80,21 @@ def create_or_open_database(account_name):
 root = tk.Tk()
 root.title("Budget Tracker")
 
+root.geometry("700x400")
+
 # Create a notebook for tabs
 notebook = ttk.Notebook(root)
-notebook.pack(fill=tk.BOTH, expand=True)
+notebook.pack(fill=tk.BOTH, expand=True, pady=5, padx=5,ipadx=5,ipady=5 )
 
 # Create tabs for adding income, expenses, and goals
 income_tab = ttk.Frame(notebook)
 expense_tab = ttk.Frame(notebook)
 goals_tab = ttk.Frame(notebook)
+
+income_tab.place(x=10, y=10, width=300, height=300)
+expense_tab.place(x=320, y=10, width=300, height=300)
+goals_tab.place(x=630, y=10, width=300, height=300)
+
 
 notebook.add(income_tab, text="Add Income")
 notebook.add(expense_tab, text="Add Expense")
