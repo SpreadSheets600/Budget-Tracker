@@ -1,12 +1,75 @@
 import tkinter as tk
 from tkinter import ttk
-import csv
+
+import sqlite3
+import time
+import os
 
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
+# Function to create or open the SQLite database
 
-budget = {'Accounts': {}}
+
+def create_or_open_database(account_name):
+    db_name = f"{account_name}.db"
+    if os.path.exists(db_name):
+        conn = sqlite3.connect(db_name)
+    else:
+        conn = sqlite3.connect(db_name)
+        cursor = conn.cursor()
+        cursor.execute("PRAGMA foreign_keys = 1")
+
+        # Create tables for income, expenses, and goals
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS accounts (
+                id INTEGER PRIMARY KEY,
+                name TEXT
+            )
+        """)
+
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS income (
+                id INTEGER PRIMARY KEY,
+                account_id INTEGER,
+                category TEXT,
+                amount REAL,
+                currency TEXT,
+                date TEXT,
+                FOREIGN KEY (account_id) REFERENCES accounts (id)
+            )
+        """)
+
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS expenses (
+                id INTEGER PRIMARY KEY,
+                account_id INTEGER,
+                category TEXT,
+                amount REAL,
+                currency TEXT,
+                date TEXT,
+                FOREIGN KEY (account_id) REFERENCES accounts (id)
+            )
+        """)
+
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS goals (
+                id INTEGER PRIMARY KEY,
+                account_id INTEGER,
+                category TEXT,
+                amount REAL,
+                currency TEXT,
+                date TEXT,
+                FOREIGN KEY (account_id) REFERENCES accounts (id)
+            )
+        """)
+
+        cursor.execute("INSERT INTO accounts (name) VALUES (?)",
+                       (account_name,))
+        conn.commit()
+
+    return conn
+
 
 # Create the main window
 root = tk.Tk()
@@ -16,194 +79,112 @@ root.title("Budget Tracker")
 notebook = ttk.Notebook(root)
 notebook.pack(fill=tk.BOTH, expand=True)
 
-# Create tabs for adding income and expenses
+# Create tabs for adding income, expenses, and goals
 income_tab = ttk.Frame(notebook)
 expense_tab = ttk.Frame(notebook)
 goals_tab = ttk.Frame(notebook)
 
 notebook.add(income_tab, text="Add Income")
 notebook.add(expense_tab, text="Add Expense")
-notebook.add(goals_tab, text="Goals")
 
 # Create a frame for the "Visualization" tab
 visualization_tab = ttk.Frame(notebook)
 notebook.add(visualization_tab, text="Visualization")
 
 # Function to add income
-def add_income(account_name, category, amount):
-    if account_name not in budget['Accounts']:
-        create_account(account_name)
-    data = load_csv_data(account_name, 'income')
-    data.append({'Category': category, 'Amount': amount, 'Currency': 'USD'})
-    save_csv_data(account_name, data, 'income')
-    update_summary_text(account_name)
 
-# Function to add expense
-def add_expense(account_name, category, amount):
-    if account_name not in budget['Accounts']:
-        create_account(account_name)
-    data = load_csv_data(account_name, 'expenses')
-    data.append({'Category': category, 'Amount': amount, 'Currency': 'USD'})
-    save_csv_data(account_name, data, 'expenses')
-    update_summary_text(account_name)
 
-# Function to add goal
-def add_goal(account_name, category, amount):
-    data = load_csv_data(account_name, 'goals')
-    data.append({'Category': category, 'Amount': amount, 'Currency': 'USD'})
-    save_csv_data(account_name, data, 'goals')
-    update_summary_text(account_name)
+def add_transaction(account_name, category, amount, transaction_type, conn):
+    timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
+    cursor = conn.cursor()
+    cursor.execute("SELECT id FROM accounts WHERE name = ?", (account_name,))
+    account_id = cursor.fetchone()[0]
+    cursor.execute(f"INSERT INTO {transaction_type} (account_id, category, amount, currency, date) VALUES (?, ?, ?, ?, ?)",
+                   (account_id, category, amount, 'USD', timestamp))
+    conn.commit()
+    update_summary_text(account_name, transaction_type, conn)
 
-# Create labels and entry fields for income
-account_name_label_income = tk.Label(income_tab, text="Account Name:")
-account_name_label_income.pack()
+# Create labels and entry fields for transactions
 
-account_name_entry_income = tk.Entry(income_tab)
-account_name_entry_income.pack()
 
-category_label_income = tk.Label(income_tab, text="Category:")
-category_label_income.pack()
+def create_transaction_widgets(tab, transaction_type, conn):
+    account_name_label = tk.Label(tab, text="Account Name:")
+    account_name_label.pack()
 
-category_entry_income = tk.Entry(income_tab)
-category_entry_income.pack()
+    account_name_entry = tk.Entry(tab)
+    account_name_entry.pack()
 
-amount_label_income = tk.Label(income_tab, text="Amount:")
-amount_label_income.pack()
+    category_label = tk.Label(tab, text="Category:")
+    category_label.pack()
 
-amount_entry_income = tk.Entry(income_tab)
-amount_entry_income.pack()
+    category_entry = tk.Entry(tab)
+    category_entry.pack()
 
-# Create button for adding income
-add_income_button = tk.Button(income_tab, text="Add Income", command=lambda: add_income(account_name_entry_income.get(), category_entry_income.get(), float(amount_entry_income.get())))
-add_income_button.pack()
+    amount_label = tk.Label(tab, text="Amount:")
+    amount_label.pack()
 
-# Create labels and entry fields for expenses
-account_name_label_expense = tk.Label(expense_tab, text="Account Name:")
-account_name_label_expense.pack()
+    amount_entry = tk.Entry(tab)
+    amount_entry.pack()
 
-account_name_entry_expense = tk.Entry(expense_tab)
-account_name_entry_expense.pack()
+    add_transaction_button = tk.Button(tab, text=f"Add {transaction_type}", command=lambda: add_transaction(
+        account_name_entry.get(), category_entry.get(), float(amount_entry.get()), transaction_type, conn))
+    add_transaction_button.pack()
 
-category_label_expense = tk.Label(expense_tab, text="Category:")
-category_label_expense.pack()
 
-category_entry_expense = tk.Entry(expense_tab)
-category_entry_expense.pack()
+# Create widgets for income and expenses tabs
+conn = create_or_open_database("Default")
+create_transaction_widgets(income_tab, 'income', conn)
+create_transaction_widgets(expense_tab, 'expenses', conn)
 
-amount_label_expense = tk.Label(expense_tab, text="Amount:")
-amount_label_expense.pack()
+# Function to update the summary text
 
-amount_entry_expense = tk.Entry(expense_tab)
-amount_entry_expense.pack()
 
-# Create button for adding expense
-add_expense_button = tk.Button(expense_tab, text="Add Expense", command=lambda: add_expense(account_name_entry_expense.get(), category_entry_expense.get(), float(amount_entry_expense.get())))
-add_expense_button.pack()
+def update_summary_text(account_name, transaction_type, conn):
+    cursor = conn.cursor()
+    cursor.execute("SELECT id FROM accounts WHERE name = ?", (account_name,))
+    account_id = cursor.fetchone()[0]
+    cursor.execute(
+        f"SELECT category, amount FROM {transaction_type} WHERE account_id = ?", (account_id,))
+    data = cursor.fetchall()
 
-# Create labels and entry fields for goals
-account_name_label_goals = tk.Label(goals_tab, text="Account Name:")
-account_name_label_goals.pack()
+    summary_text.config(state=tk.NORMAL)
+    summary_text.delete(1.0, tk.END)
+    summary_text.insert(tk.END, f"Summary for Account: {account_name}\n\n")
+    summary_text.insert(tk.END, f"{transaction_type.capitalize()}:\n")
+    for item in data:
+        summary_text.insert(tk.END, f"{item[0]}: ${item[1]:.2f}\n")
+    summary_text.config(state=tk.DISABLED)
 
-account_name_entry_goals = tk.Entry(goals_tab)
-account_name_entry_goals.pack()
 
-category_label_goals = tk.Label(goals_tab, text="Category:")
-category_label_goals.pack()
-
-category_entry_goals = tk.Entry(goals_tab)
-category_entry_goals.pack()
-
-amount_label_goals = tk.Label(goals_tab, text="Amount:")
-amount_label_goals.pack()
-
-amount_entry_goals = tk.Entry(goals_tab)
-amount_entry_goals.pack()
-
-# Create button for adding goal
-add_goal_button = tk.Button(goals_tab, text="Set Goal", command=lambda: add_goal(account_name_entry_goals.get(), category_entry_goals.get(), float(amount_entry_goals.get())))
-add_goal_button.pack()
-
-# Function to create an account and CSV files
-def create_account(account_name):
-    budget['Accounts'][account_name] = {'Income': [], 'Expenses': [], 'Goals': []}
-    create_account_csv(account_name)
-
-# Function to create account CSV files
-def create_account_csv(account_name):
-    for data_type in ['income', 'expenses', 'goals']:
-        filename = f'{account_name}_{data_type}.csv'
-        with open(filename, mode='w', newline='') as file:
-            fieldnames = ['Category', 'Amount', 'Currency']
-            writer = csv.DictWriter(file, fieldnames=fieldnames)
-            writer.writeheader()
-
-# Function to load data from CSV file
-def load_csv_data(account_name, data_type):
-    data = []
-    filename = f'{account_name}_{data_type}.csv'
-    try:
-        with open(filename, mode='r') as csv_file:
-            reader = csv.DictReader(csv_file)
-            for row in reader:
-                row['Amount'] = float(row['Amount'])
-                data.append(row)
-    except FileNotFoundError:
-        pass
-    budget['Accounts'][account_name][data_type] = data
-    return data
-
-# Function to save data to CSV file
-def save_csv_data(account_name, data, data_type):
-    filename = f'{account_name}_{data_type}.csv'
-    with open(filename, mode='w', newline='') as csv_file:
-        fieldnames = ['Category', 'Amount', 'Currency']
-        writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
-        writer.writeheader()
-        for item in data:
-            writer.writerow(item)
-
-# Create a frame for the "Display Summary" tab
+# Button to display the summary in the "Display Summary" tab
 summary_tab = ttk.Frame(notebook)
 notebook.add(summary_tab, text="Display Summary")
 
-# Label and entry field for account name in the "Display Summary" tab
 summary_account_label = tk.Label(summary_tab, text="Account Name:")
 summary_account_label.pack()
 
 summary_account_entry = tk.Entry(summary_tab)
 summary_account_entry.pack()
 
-# Text widget to display the summary
 summary_text = tk.Text(summary_tab, height=10, width=40)
 summary_text.pack()
 
-# Function to update the summary text
-def update_summary_text(account_name):
-    summary_text.config(state=tk.NORMAL)
-    summary_text.delete(1.0, tk.END)
-    summary_text.insert(tk.END, f"Summary for Account: {account_name}\n\n")
-    summary_text.insert(tk.END, "Income:\n")
-    income_data = load_csv_data(account_name, 'income')
-    for item in income_data:
-        summary_text.insert(tk.END, f"{item['Category']}: ${item['Amount']:.2f}\n")
-    summary_text.insert(tk.END, "\nExpenses:\n")
-    expenses_data = load_csv_data(account_name, 'expenses')
-    for item in expenses_data:
-        summary_text.insert(tk.END, f"{item['Category']}: ${item['Amount']:.2f}\n")
-    summary_text.insert(tk.END, "\nGoals:\n")
-    goals_data = load_csv_data(account_name, 'goals')
-    for item in goals_data:
-        summary_text.insert(tk.END, f"{item['Category']}: ${item['Amount']:.2f}\n")
-    summary_text.config(state=tk.DISABLED)
-
-# Button to display the summary in the "Display Summary" tab
-display_summary_button = tk.Button(summary_tab, text="Display Summary", command=lambda: update_summary_text(summary_account_entry.get()))
+display_summary_button = tk.Button(summary_tab, text="Display Summary", command=lambda: update_summary_text(
+    summary_account_entry.get(), "income", conn))
 display_summary_button.pack()
 
-def create_bar_chart(account_name):
-    income_data = load_csv_data(account_name, 'income')
-    categories = [item['Category'] for item in income_data]
-    amounts = [item['Amount'] for item in income_data]
+# Function to create a bar chart
+
+
+def create_bar_chart(account_name, conn):
+    cursor = conn.cursor()
+    cursor.execute("SELECT id FROM accounts WHERE name = ?", (account_name,))
+    account_id = cursor.fetchone()[0]
+    cursor.execute(
+        "SELECT category, amount FROM income WHERE account_id = ?", (account_id,))
+    data = cursor.fetchall()
+    categories = [item[0] for item in data]
+    amounts = [item[1] for item in data]
 
     plt.figure(figsize=(8, 6))
     plt.bar(categories, amounts)
@@ -217,11 +198,43 @@ def create_bar_chart(account_name):
     canvas_widget = canvas.get_tk_widget()
     canvas_widget.pack()
 
+# Function to create a line chart
+
+
+def create_line_chart(account_name, conn):
+    cursor = conn.cursor()
+    cursor.execute("SELECT id FROM accounts WHERE name = ?", (account_name,))
+    account_id = cursor.fetchone()[0]
+    cursor.execute(
+        "SELECT date, amount FROM income WHERE account_id = ?", (account_id,))
+    data = cursor.fetchall()
+    dates = [item[0] for item in data]
+    amounts = [item[1] for item in data]
+
+    plt.figure(figsize=(8, 6))
+    plt.plot(dates, amounts, marker='o', linestyle='-')
+    plt.xlabel('Date')
+    plt.ylabel('Income Amount (USD)')
+    plt.title('Income Over Time')
+    plt.xticks(rotation=45, ha='right')
+
+    # Embed the matplotlib figure in the Tkinter window
+    canvas = FigureCanvasTkAgg(plt.gcf(), master=visualization_tab)
+    canvas_widget = canvas.get_tk_widget()
+    canvas_widget.pack()
+
 # Function to create a pie chart
-def create_pie_chart(account_name):
-    expenses_data = load_csv_data(account_name, 'expenses')
-    categories = [item['Category'] for item in expenses_data]
-    amounts = [item['Amount'] for item in expenses_data]
+
+
+def create_pie_chart(account_name, conn):
+    cursor = conn.cursor()
+    cursor.execute("SELECT id FROM accounts WHERE name = ?", (account_name,))
+    account_id = cursor.fetchone()[0]
+    cursor.execute(
+        "SELECT category, amount FROM expenses WHERE account_id = ?", (account_id,))
+    data = cursor.fetchall()
+    categories = [item[0] for item in data]
+    amounts = [item[1] for item in data]
 
     plt.figure(figsize=(8, 6))
     plt.pie(amounts, labels=categories, autopct='%1.1f%%', startangle=140)
@@ -232,12 +245,119 @@ def create_pie_chart(account_name):
     canvas_widget = canvas.get_tk_widget()
     canvas_widget.pack()
 
-# Create a button to generate a bar chart
-bar_chart_button = tk.Button(visualization_tab, text="Generate Income Bar Chart", command=lambda: create_bar_chart(account_name_entry_income.get()))
+
+# Create buttons to generate bar, line, and pie charts
+bar_chart_button = tk.Button(visualization_tab, text="Generate Income Bar Chart",
+                             command=lambda: create_bar_chart(summary_account_entry.get(), conn))
 bar_chart_button.pack()
 
-# Create a button to generate a pie chart
-pie_chart_button = tk.Button(visualization_tab, text="Generate Expense Pie Chart", command=lambda: create_pie_chart(account_name_entry_income.get()))
+line_chart_button = tk.Button(visualization_tab, text="Generate Income Line Chart",
+                              command=lambda: create_line_chart(summary_account_entry.get(), conn))
+line_chart_button.pack()
+
+pie_chart_button = tk.Button(visualization_tab, text="Generate Expense Pie Chart",
+                             command=lambda: create_pie_chart(summary_account_entry.get(), conn))
 pie_chart_button.pack()
+
+# Function to calculate and display budget analysis
+
+
+def budget_analysis(account_name, conn):
+    cursor = conn.cursor()
+    cursor.execute("SELECT id FROM accounts WHERE name = ?", (account_name,))
+    account_id = cursor.fetchone()[0]
+
+    cursor.execute(
+        "SELECT SUM(amount) FROM income WHERE account_id = ?", (account_id,))
+    total_income = cursor.fetchone()[0]
+    cursor.execute(
+        "SELECT SUM(amount) FROM expenses WHERE account_id = ?", (account_id,))
+    total_expenses = cursor.fetchone()[0]
+    net_income = total_income - total_expenses
+
+    analysis_text.config(state=tk.NORMAL)
+    analysis_text.delete(1.0, tk.END)
+    analysis_text.insert(
+        tk.END, f"Budget Analysis for Account: {account_name}\n\n")
+    analysis_text.insert(tk.END, f"Total Income: ${total_income:.2f}\n")
+    analysis_text.insert(tk.END, f"Total Expenses: ${total_expenses:.2f}\n")
+    analysis_text.insert(tk.END, f"Net Income: ${net_income:.2f}\n")
+    analysis_text.config(state=tk.DISABLED)
+
+
+# Create a tab for budget analysis
+analysis_tab = ttk.Frame(notebook)
+notebook.add(analysis_tab, text="Budget Analysis")
+
+analysis_account_label = tk.Label(analysis_tab, text="Account Name:")
+analysis_account_label.pack()
+
+analysis_account_entry = tk.Entry(analysis_tab)
+analysis_account_entry.pack()
+
+analysis_text = tk.Text(analysis_tab, height=10, width=40)
+analysis_text.pack()
+
+analysis_button = tk.Button(analysis_tab, text="Calculate Budget Analysis",
+                            command=lambda: budget_analysis(analysis_account_entry.get(), conn))
+analysis_button.pack()
+
+# Function to create or update a financial goal
+
+
+def set_goal(account_name, goal_name, target_amount, conn):
+    cursor = conn.cursor()
+    cursor.execute("SELECT id FROM accounts WHERE name = ?", (account_name,))
+    account_id = cursor.fetchone()[0]
+
+    cursor.execute("INSERT OR REPLACE INTO goals (account_id, category, amount, currency, date) VALUES (?, ?, ?, ?, ?)",
+                   (account_id, goal_name, target_amount, 'USD', 'target_date_here'))
+    conn.commit()
+
+    # Calculate progress towards the goal
+    cursor.execute(
+        "SELECT SUM(amount) FROM income WHERE account_id = ?", (account_id,))
+    total_income = cursor.fetchone()[0]
+    cursor.execute(
+        "SELECT SUM(amount) FROM expenses WHERE account_id = ?", (account_id,))
+    total_expenses = cursor.fetchone()[0]
+    progress = total_income - total_expenses
+
+    goal_progress_text.config(state=tk.NORMAL)
+    goal_progress_text.delete(1.0, tk.END)
+    goal_progress_text.insert(tk.END, f"Goal: {goal_name}\n")
+    goal_progress_text.insert(tk.END, f"Target Amount: ${target_amount:.2f}\n")
+    goal_progress_text.insert(tk.END, f"Progress: ${progress:.2f}\n")
+    goal_progress_text.config(state=tk.DISABLED)
+
+
+# Create a tab for setting and tracking financial goals
+goals_tab = ttk.Frame(notebook)
+notebook.add(goals_tab, text="Goals")
+
+goal_account_label = tk.Label(goals_tab, text="Account Name:")
+goal_account_label.pack()
+
+goal_account_entry = tk.Entry(goals_tab)
+goal_account_entry.pack()
+
+goal_name_label = tk.Label(goals_tab, text="Goal Name:")
+goal_name_label.pack()
+
+goal_name_entry = tk.Entry(goals_tab)
+goal_name_entry.pack()
+
+target_amount_label = tk.Label(goals_tab, text="Target Amount:")
+target_amount_label.pack()
+
+target_amount_entry = tk.Entry(goals_tab)
+target_amount_entry.pack()
+
+goal_button = tk.Button(goals_tab, text="Set Goal", command=lambda: set_goal(
+    goal_account_entry.get(), goal_name_entry.get(), float(target_amount_entry.get()), conn))
+goal_button.pack()
+
+goal_progress_text = tk.Text(goals_tab, height=5, width=40)
+goal_progress_text.pack()
 
 root.mainloop()
