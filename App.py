@@ -1,4 +1,9 @@
 import tkinter as tk
+import tkinter.font as tkFont
+
+from tkinter.ttk import *
+
+from tkinter import *
 from tkinter import ttk
 
 import sqlite3
@@ -91,6 +96,9 @@ notebook.add(expense_tab, text="Add Expense")
 visualization_tab = ttk.Frame(notebook)
 notebook.add(visualization_tab, text="Visualization")
 
+root.tk.call("source", r"C:\Users\SOHAM\Desktop\Science Exhibition\Theme\azure.tcl")
+root.tk.call("set_theme", "light")
+
 # Function to add income
 
 
@@ -108,27 +116,27 @@ def add_transaction(account_name, category, amount, transaction_type, conn):
 
 
 def create_transaction_widgets(tab, transaction_type, conn):
-    account_name_label = tk.Label(tab, text="Account Name:")
-    account_name_label.pack()
+    account_name_label = ttk.Label(tab, text="Account Name:")
+    account_name_label.pack(pady=5)
 
-    account_name_entry = tk.Entry(tab)
-    account_name_entry.pack()
+    account_name_entry = ttk.Entry(tab)
+    account_name_entry.pack(pady=5)
 
-    category_label = tk.Label(tab, text="Category:")
-    category_label.pack()
+    category_label = ttk.Label(tab, text="Category:")
+    category_label.pack(pady=5)
 
-    category_entry = tk.Entry(tab)
-    category_entry.pack()
+    category_entry = ttk.Entry(tab)
+    category_entry.pack(pady=5)
 
-    amount_label = tk.Label(tab, text="Amount:")
-    amount_label.pack()
+    amount_label = ttk.Label(tab, text="Amount:")
+    amount_label.pack(pady=5)
 
-    amount_entry = tk.Entry(tab)
-    amount_entry.pack()
+    amount_entry = ttk.Entry(tab)
+    amount_entry.pack(pady=5)
 
-    add_transaction_button = tk.Button(tab, text=f"Add {transaction_type}", command=lambda: add_transaction(
+    add_transaction_button = ttk.Button(tab, text=f"Add {transaction_type}", command=lambda: add_transaction(
         account_name_entry.get(), category_entry.get(), float(amount_entry.get()), transaction_type, conn))
-    add_transaction_button.pack()
+    add_transaction_button.pack(pady=5)
 
 
 # Create widgets for income and expenses tabs
@@ -147,31 +155,31 @@ def update_summary_text(account_name, transaction_type, conn):
         f"SELECT category, amount FROM {transaction_type} WHERE account_id = ?", (account_id,))
     data = cursor.fetchall()
 
-    summary_text.config(state=tk.NORMAL)
-    summary_text.delete(1.0, tk.END)
-    summary_text.insert(tk.END, f"Summary for Account: {account_name}\n\n")
-    summary_text.insert(tk.END, f"{transaction_type.capitalize()}:\n")
+    summary_text.config(state=ttk.NORMAL)
+    summary_text.delete(1.0, ttk.END)
+    summary_text.insert(ttk.END, f"Summary for Account: {account_name}\n\n")
+    summary_text.insert(ttk.END, f"{transaction_type.capitalize()}:\n")
     for item in data:
-        summary_text.insert(tk.END, f"{item[0]}: ${item[1]:.2f}\n")
-    summary_text.config(state=tk.DISABLED)
+        summary_text.insert(ttk.END, f"{item[0]}: ${item[1]:.2f}\n")
+    summary_text.config(state=ttk.DISABLED)
 
 
 # Button to display the summary in the "Display Summary" tab
 summary_tab = ttk.Frame(notebook)
 notebook.add(summary_tab, text="Display Summary")
 
-summary_account_label = tk.Label(summary_tab, text="Account Name:")
-summary_account_label.pack()
+summary_account_label = ttk.Label(summary_tab, text="Account Name:")
+summary_account_label.pack(pady=5)
 
-summary_account_entry = tk.Entry(summary_tab)
-summary_account_entry.pack()
+summary_account_entry = ttk.Entry(summary_tab)
+summary_account_entry.pack(pady=5)
 
 summary_text = tk.Text(summary_tab, height=10, width=40)
-summary_text.pack()
+summary_text.pack(pady=5)
 
-display_summary_button = tk.Button(summary_tab, text="Display Summary", command=lambda: update_summary_text(
+display_summary_button = ttk.Button(summary_tab, text="Display Summary", command=lambda: update_summary_text(
     summary_account_entry.get(), "income", conn))
-display_summary_button.pack()
+display_summary_button.pack(pady=5)
 
 # Function to create a bar chart
 
@@ -196,7 +204,7 @@ def create_bar_chart(account_name, conn):
     # Embed the matplotlib figure in the Tkinter window
     canvas = FigureCanvasTkAgg(plt.gcf(), master=visualization_tab)
     canvas_widget = canvas.get_tk_widget()
-    canvas_widget.pack()
+    canvas_widget.pack(pady=5)
 
 # Function to create a line chart
 
@@ -221,7 +229,7 @@ def create_line_chart(account_name, conn):
     # Embed the matplotlib figure in the Tkinter window
     canvas = FigureCanvasTkAgg(plt.gcf(), master=visualization_tab)
     canvas_widget = canvas.get_tk_widget()
-    canvas_widget.pack()
+    canvas_widget.pack(pady=5)
 
 # Function to create a pie chart
 
@@ -243,21 +251,21 @@ def create_pie_chart(account_name, conn):
     # Embed the matplotlib figure in the Tkinter window
     canvas = FigureCanvasTkAgg(plt.gcf(), master=visualization_tab)
     canvas_widget = canvas.get_tk_widget()
-    canvas_widget.pack()
+    canvas_widget.pack(pady=5)
 
 
 # Create buttons to generate bar, line, and pie charts
-bar_chart_button = tk.Button(visualization_tab, text="Generate Income Bar Chart",
+bar_chart_button = ttk.Button(visualization_tab, text="Generate Income Bar Chart",
                              command=lambda: create_bar_chart(summary_account_entry.get(), conn))
-bar_chart_button.pack()
+bar_chart_button.pack(pady=5)
 
-line_chart_button = tk.Button(visualization_tab, text="Generate Income Line Chart",
+line_chart_button = ttk.Button(visualization_tab, text="Generate Income Line Chart",
                               command=lambda: create_line_chart(summary_account_entry.get(), conn))
-line_chart_button.pack()
+line_chart_button.pack(pady=5)
 
-pie_chart_button = tk.Button(visualization_tab, text="Generate Expense Pie Chart",
+pie_chart_button = ttk.Button(visualization_tab, text="Generate Expense Pie Chart",
                              command=lambda: create_pie_chart(summary_account_entry.get(), conn))
-pie_chart_button.pack()
+pie_chart_button.pack(pady=5)
 
 # Function to calculate and display budget analysis
 
@@ -275,32 +283,32 @@ def budget_analysis(account_name, conn):
     total_expenses = cursor.fetchone()[0]
     net_income = total_income - total_expenses
 
-    analysis_text.config(state=tk.NORMAL)
-    analysis_text.delete(1.0, tk.END)
+    analysis_text.config(state=ttk.NORMAL)
+    analysis_text.delete(1.0, ttk.END)
     analysis_text.insert(
-        tk.END, f"Budget Analysis for Account: {account_name}\n\n")
-    analysis_text.insert(tk.END, f"Total Income: ${total_income:.2f}\n")
-    analysis_text.insert(tk.END, f"Total Expenses: ${total_expenses:.2f}\n")
-    analysis_text.insert(tk.END, f"Net Income: ${net_income:.2f}\n")
-    analysis_text.config(state=tk.DISABLED)
+        ttk.END, f"Budget Analysis for Account: {account_name}\n\n")
+    analysis_text.insert(ttk.END, f"Total Income: ${total_income:.2f}\n")
+    analysis_text.insert(ttk.END, f"Total Expenses: ${total_expenses:.2f}\n")
+    analysis_text.insert(ttk.END, f"Net Income: ${net_income:.2f}\n")
+    analysis_text.config(state=ttk.DISABLED)
 
 
 # Create a tab for budget analysis
 analysis_tab = ttk.Frame(notebook)
 notebook.add(analysis_tab, text="Budget Analysis")
 
-analysis_account_label = tk.Label(analysis_tab, text="Account Name:")
-analysis_account_label.pack()
+analysis_account_label = ttk.Label(analysis_tab, text="Account Name:")
+analysis_account_label.pack(pady=5)
 
-analysis_account_entry = tk.Entry(analysis_tab)
-analysis_account_entry.pack()
+analysis_account_entry = ttk.Entry(analysis_tab)
+analysis_account_entry.pack(pady=5)
 
 analysis_text = tk.Text(analysis_tab, height=10, width=40)
-analysis_text.pack()
+analysis_text.pack(pady=5)
 
-analysis_button = tk.Button(analysis_tab, text="Calculate Budget Analysis",
+analysis_button = ttk.Button(analysis_tab, text="Calculate Budget Analysis",
                             command=lambda: budget_analysis(analysis_account_entry.get(), conn))
-analysis_button.pack()
+analysis_button.pack(pady=5)
 
 # Function to create or update a financial goal
 
@@ -323,41 +331,41 @@ def set_goal(account_name, goal_name, target_amount, conn):
     total_expenses = cursor.fetchone()[0]
     progress = total_income - total_expenses
 
-    goal_progress_text.config(state=tk.NORMAL)
-    goal_progress_text.delete(1.0, tk.END)
-    goal_progress_text.insert(tk.END, f"Goal: {goal_name}\n")
-    goal_progress_text.insert(tk.END, f"Target Amount: ${target_amount:.2f}\n")
-    goal_progress_text.insert(tk.END, f"Progress: ${progress:.2f}\n")
-    goal_progress_text.config(state=tk.DISABLED)
+    goal_progress_text.config(state=ttk.NORMAL)
+    goal_progress_text.delete(1.0, ttk.END)
+    goal_progress_text.insert(ttk.END, f"Goal: {goal_name}\n")
+    goal_progress_text.insert(ttk.END, f"Target Amount: ${target_amount:.2f}\n")
+    goal_progress_text.insert(ttk.END, f"Progress: ${progress:.2f}\n")
+    goal_progress_text.config(state=ttk.DISABLED)
 
 
 # Create a tab for setting and tracking financial goals
 goals_tab = ttk.Frame(notebook)
 notebook.add(goals_tab, text="Goals")
 
-goal_account_label = tk.Label(goals_tab, text="Account Name:")
-goal_account_label.pack()
+goal_account_label = ttk.Label(goals_tab, text="Account Name:")
+goal_account_label.pack(pady=5)
 
-goal_account_entry = tk.Entry(goals_tab)
-goal_account_entry.pack()
+goal_account_entry = ttk.Entry(goals_tab)
+goal_account_entry.pack(pady=5)
 
-goal_name_label = tk.Label(goals_tab, text="Goal Name:")
-goal_name_label.pack()
+goal_name_label = ttk.Label(goals_tab, text="Goal Name:")
+goal_name_label.pack(pady=5)
 
-goal_name_entry = tk.Entry(goals_tab)
-goal_name_entry.pack()
+goal_name_entry = ttk.Entry(goals_tab)
+goal_name_entry.pack(pady=5)
 
-target_amount_label = tk.Label(goals_tab, text="Target Amount:")
-target_amount_label.pack()
+target_amount_label = ttk.Label(goals_tab, text="Target Amount:")
+target_amount_label.pack(pady=5)
 
-target_amount_entry = tk.Entry(goals_tab)
-target_amount_entry.pack()
+target_amount_entry = ttk.Entry(goals_tab)
+target_amount_entry.pack(pady=5)
 
-goal_button = tk.Button(goals_tab, text="Set Goal", command=lambda: set_goal(
+goal_button = ttk.Button(goals_tab, text="Set Goal", command=lambda: set_goal(
     goal_account_entry.get(), goal_name_entry.get(), float(target_amount_entry.get()), conn))
-goal_button.pack()
+goal_button.pack(pady=5)
 
 goal_progress_text = tk.Text(goals_tab, height=5, width=40)
-goal_progress_text.pack()
+goal_progress_text.pack(pady=5)
 
 root.mainloop()
