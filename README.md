@@ -1,5 +1,6 @@
 # Budget Tracker
-My CS Group Project For Half Yearly
+Previosly - My CS Group Project For Half Yearly ( No One Worked )
+Now - A Ambitious project That I Want To Make With Friends ( AGAIN ) Which Will Work :)
 
 # TO DO
 1. [ ] Fix The Visuals
