@@ -31,7 +31,7 @@ This project is a part of Hacktoberfest, and we're welcoming contributions! Whet
    ```
 2. Install the necessary dependencies:
    ```bash
-   pip install matplotlib customtkinter
+   pip install matplotlib customtkinter db-sqlite3
    ```
 3. Run the application:
    ```bash
