@@ -116,19 +116,19 @@ def create_transaction_widgets(tab, transaction_type):
     account_name_label = ttk.Label(tab, text="Account Name:")
     account_name_label.pack(pady=5)
 
-    account_name_entry = ttk.Entry(tab)
+    account_name_entry = ttk.Entry(tab, width=50)
     account_name_entry.pack(pady=5)
 
     category_label = ttk.Label(tab, text="Category:")
     category_label.pack(pady=5)
 
-    category_entry = ttk.Entry(tab)
+    category_entry = ttk.Entry(tab, width=50)
     category_entry.pack(pady=5)
 
     amount_label = ttk.Label(tab, text="Amount:")
     amount_label.pack(pady=5)
 
-    amount_entry = ttk.Entry(tab)
+    amount_entry = ttk.Entry(tab, width=50)
     amount_entry.pack(pady=5)
 
     add_transaction_button = ttk.Button(tab, text=f"Add {transaction_type.capitalize()}",
