@@ -66,6 +66,20 @@ def create_or_open_database(account_name):
 
     return conn
 
+#Function For Dark Mode
+def toggle_dark_mode():
+    style = ttk.Style()
+    current_theme = style.theme_use()
+    if current_theme == 'clam':
+        style.theme_use('alt')
+        # Configure dark theme styles
+        style.configure('TEntry', background='black', foreground='white')
+    else:
+        style.theme_use('clam')
+        # Reset to light mode styles
+        style.configure('TEntry', background='white', foreground='black')
+
+
 # Create the main window
 root = tk.Tk()
 root.title("Budget Tracker")
@@ -82,6 +96,17 @@ goals_tab = ttk.Frame(notebook)
 
 notebook.add(income_tab, text="Add Income")
 notebook.add(expense_tab, text="Add Expense")
+
+#dark mode toggle button
+dark_mode_button = ttk.Button(root, text="Toggle Dark Mode", command=toggle_dark_mode)
+dark_mode_button.pack(pady=10)
+
+# Example widgets to demonstrate the theme
+label = ttk.Label(income_tab, text="Example Label in Light/Dark Mode")
+label.pack(pady=10)
+
+entry = ttk.Entry(income_tab)
+entry.pack(pady=10)
 
 # Create a frame for the "Visualization" tab
 visualization_tab = ttk.Frame(notebook)
