@@ -1,0 +1,37 @@
+name: Refactor Code
+description: Suggest a code refactoring for the Budget Tracker project
+title: "[REFACTOR] - "
+labels: refactor
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Code refactoring helps improve the structure without changing the functionality. Please provide details for your suggested refactor.
+
+  - type: input
+    id: affected_code
+    attributes:
+      label: Affected Code/Module
+      description: Mention which code or module you are refactoring.
+      placeholder: "What part of the code is being refactored?"
+
+  - type: textarea
+    id: reason_for_refactor
+    attributes:
+      label: Reason for Refactor
+      description: Explain why this refactor is necessary or beneficial.
+      placeholder: "Why does this code need refactoring?"
+
+  - type: textarea
+    id: benefits
+    attributes:
+      label: Expected Benefits
+      description: Describe the benefits of refactoring this code (e.g., performance improvements, readability).
+      placeholder: "How will this refactor improve the project?"
+
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: Additional Context
+      description: Add any other details about the refactor.
+      placeholder: "Any additional context or technical considerations"

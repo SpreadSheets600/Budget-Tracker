@@ -1,0 +1,31 @@
+name: New Feature
+description: Suggest a new feature for the Budget Tracker project
+title: "[FEATURE] - "
+labels: enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for submitting a feature request! Please provide as many details as possible to help us understand and implement your suggestion.
+
+  - type: input
+    id: feature_summary
+    attributes:
+      label: Feature Summary
+      description: Briefly describe the feature you'd like to request.
+      placeholder: "A clear and concise description of what you want to happen."
+
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: Additional Context
+      description: Add any other context or ideas related to this feature.
+      placeholder: "Any other context or details"
+
+  - type: input
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Any alternative solutions or features you've considered.
+      placeholder: "List any alternatives"
+
