@@ -1,11 +1,84 @@
-# Budget Tracker
-Previosly - My CS Group Project For Half Yearly ( No One Worked )
-Now - A Ambitious project That I Want To Make With Friends ( AGAIN ) Which Will Work :)
 
-# TO DO
-1. [ ] Fix The Visuals
-2. [ ] Fix Visualisation Tab
-3. [ ] Work On Lendings Tab
-4. [ ] Work On Borrowing Tab
-5. [ ] Work On Making The Data Permamnent
-6. [ ] Replace Tkinter With Custom Tkinter
+# Budget Tracker
+
+### Overview
+Originally a half-yearly CS group project where (almost) no one contributed, this Budget Tracker has transformed into an ambitious project that I now aim to complete with friends (again, this time for real!). The goal is to create a functional, user-friendly budget tracker that helps people manage their income, expenses, and financial goals efficiently.
+
+This project is a part of Hacktoberfest, and we're welcoming contributions! Whether it's bug fixes, new features, or improvements, there's room for everyone to help!
+
+---
+
+## Features
+- **Add Income & Expenses**: Users can easily log their income and expenses, categorize them, and store them in an SQLite database.
+- **Financial Goals**: Set savings goals, track progress, and visualize how close you are to achieving them.
+- **Visualizations**: Bar charts, pie charts, and line graphs provide a clear picture of your financial habits.
+- **Summary & Analysis**: View detailed summaries and analysis of your spending habits and overall budget health.
+
+---
+
+## Getting Started
+
+### Prerequisites
+- Python 3.x
+- Tkinter
+- SQLite3
+- Matplotlib
+
+### Installation
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/your-repo/budget-tracker.git
+   ```
+2. Install the necessary dependencies:
+   ```bash
+   pip install matplotlib customtkinter
+   ```
+3. Run the application:
+   ```bash
+   python main.py
+   ```
+
+---
+
+## Contributing
+We welcome contributions! Here's how you can get started:
+
+1. Fork the repository.
+2. Create a new branch:
+   ```bash
+   git checkout -b feature-name
+   ```
+3. Make your changes and commit them:
+   ```bash
+   git commit -m "Add new feature"
+   ```
+4. Push your changes:
+   ```bash
+   git push origin feature-name
+   ```
+5. Create a pull request on GitHub.
+
+---
+
+## To-Do List
+### Core Functionalities
+1. [ ] **Fix the Visuals**: Improve the UI/UX, adjust layout, and ensure the design is clean and user-friendly.
+2. [ ] **Fix Visualization Tab**: Ensure that charts (bar, line, pie) display properly without overlapping or layout issues.
+3. [ ] **Work on Lendings Tab**: Add a feature where users can track money lent to others, with options to set deadlines and reminders.
+4. [ ] **Work on Borrowing Tab**: Implement a tab to track loans or borrowed amounts, including deadlines and reminders.
+5. [ ] **Make Data Permanent**: Enhance the database functionality to ensure persistent data storage, so users can retrieve past transactions after restarting the app.
+6. [ ] **Replace Tkinter with CustomTkinter**: Enhance the look and feel of the app by integrating `CustomTkinter` for modern, polished widgets.
+
+### Enhancements
+7. [ ] **User Authentication**: Add basic login functionality to allow different users to manage their accounts separately.
+8. [ ] **Currency Conversion**: Implement a feature to convert between currencies, pulling exchange rates from an API.
+9. [ ] **Recurring Transactions**: Enable users to set recurring transactions (monthly bills, salary, etc.) that auto-log at set intervals.
+10. [ ] **Export Data**: Allow users to export their data (income, expenses, goals) to CSV or Excel format for easier analysis.
+11. [ ] **Add Notifications**: Implement a system to notify users when they exceed budget limits or reach savings goals.
+12. [ ] **Mobile App Version**: Plan and develop a mobile version (possibly using Kivy or other frameworks).
+
+---
+
+### License
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
