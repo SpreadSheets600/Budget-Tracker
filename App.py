@@ -15,6 +15,16 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("blue")
 
+
+def load_to_json():
+    try:
+        with open("users.json", "r") as file:
+            return json.load(file)
+    except FileNotFoundError:
+        return None
+        
+        
+
 # Function to create or open the SQLite database
 def create_or_open_database(account_name):
     db_name = f"{account_name}.db"
@@ -224,7 +234,7 @@ def save_to_json(account_name, conn):
     income_data = cursor.fetchall()
     
     cursor.execute("SELECT category, amount, currency, date FROM expenses WHERE account_id = (SELECT id FROM accounts WHERE name = ?)", account_name,)
-    expense_data = cursor.fetchlall()
+    expense_data = cursor.fetchall()
     
     cursor.execute("SELECT category, amount, currency, date FROM goals WHERE account_id = (SELECT id FROM accounts WHERE name = ?)", account_name,)
     goal_data = cursor.fetchall()
@@ -236,8 +246,15 @@ def save_to_json(account_name, conn):
     "goals": [{"category": item[0], "amount": item[1], "currency": item[2], "date": item[3]} for item in goal_data]
     }
     
-    with open(f{"account_name.json", "w"}) as json_file:
+    with open(f"{account_name}.json", "w") as json_file:
         json.dump(data, json_file, indent = 4)
+        
+
+    
+        
+        
+
+    
 
 # Main Loop
 root.mainloop()
