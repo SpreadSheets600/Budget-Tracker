@@ -1,0 +1,36 @@
+name: Breaking Change
+description: Report a breaking change to the Budget Tracker project
+title: "[BREAKING CHANGE] - "
+labels: breaking change
+body:
+  - type: markdown
+    attributes:
+      value: |
+        A breaking change is one that may cause existing functionality to stop working as expected. Please provide the details below.
+
+  - type: input
+    id: description
+    attributes:
+      label: Change Description
+      description: Describe the breaking change in detail.
+      placeholder: "What exactly is changing and why?"
+
+  - type: textarea
+    id: impact_analysis
+    attributes:
+      label: Impact Analysis
+      description: Describe how this change will affect the rest of the project or downstream dependencies.
+      placeholder: "List the impacts of this change, such as other components, features, or APIs that may break."
+
+  - type: input
+    id: migration_plan
+    attributes:
+      label: Migration Plan
+      description: Provide a migration strategy or steps to avoid breaking existing functionality.
+      placeholder: "How can we mitigate this change and ensure users can upgrade smoothly?"
+
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: Additional Context
+      description: Add any other details or concerns related to this breaking change.
