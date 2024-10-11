@@ -35,7 +35,7 @@ This project is a part of Hacktoberfest, and we're welcoming contributions! Whet
    ```
 3. Run the application:
    ```bash
-   python main.py
+   python App.py
    ```
 
 ---
