@@ -1,11 +1,13 @@
-import tkinter as tk
-from tkinter import ttk
+import customtkinter as ctk # Imports coustomTkinter
 import tkinter.font as tkFont
 import sqlite3
 import time
 import os
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+
+ctk.set_appearance_mode("Dark") # set color scheme
+ctk.set_default_color_theme("blue")
 
 # Function to create or open the SQLite database
 def create_or_open_database(account_name):
@@ -67,58 +69,62 @@ def create_or_open_database(account_name):
     return conn
 
 # Create the main window
-root = tk.Tk()
+root = ctk.CTk() # Change widgets
 root.title("Budget Tracker")
 root.geometry("800x600")
 
 # Create a notebook for tabs
-notebook = ttk.Notebook(root)
-notebook.pack(fill=tk.BOTH, expand=True, pady=5, padx=5)
+notebook = ctk.CTkTabView(root)
+notebook.pack(fill=ctk.BOTH, expand=True, pady=5, padx=5)
 
 # Create tabs for adding income, expenses, and goals
-income_tab = ttk.Frame(notebook)
-expense_tab = ttk.Frame(notebook)
-goals_tab = ttk.Frame(notebook)
+income_tab = ctk.CTkFrame(notebook)
+expense_tab = ctk.CTkFrame(notebook)
+goals_tab = ctk.CTkFrame(notebook)
 
 notebook.add(income_tab, text="Add Income")
 notebook.add(expense_tab, text="Add Expense")
 
 # Create a frame for the "Visualization" tab
-visualization_tab = ttk.Frame(notebook)
+visualization_tab = ctk.CTkFrame(notebook)
 notebook.add(visualization_tab, text="Visualization")
 
 # Function to add income or expense
 def add_transaction(account_name, category, amount, transaction_type, conn):
-    timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
-    cursor = conn.cursor()
-    cursor.execute("SELECT id FROM accounts WHERE name = ?", (account_name,))
-    account_id = cursor.fetchone()[0]
-    cursor.execute(f"INSERT INTO {transaction_type} (account_id, category, amount, currency, date) VALUES (?, ?, ?, ?, ?)",
+    try:
+        timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
+        cursor = conn.cursor()
+        cursor.execute("SELECT id FROM accounts WHERE name = ?", (account_name,))
+        account_id = cursor.fetchone()[0]
+        cursor.execute(f"INSERT INTO {transaction_type} (account_id, category, amount, currency, date) VALUES (?, ?, ?, ?, ?)",
                    (account_id, category, amount, 'USD', timestamp))
-    conn.commit()
-    update_summary_text(account_name, transaction_type, conn)
+        conn.commit()
+        update_summary_text(account_name, transaction_type, conn)
+    except ValueError:
+        print("Invalid amount")
+        
 
 # Create labels and entry fields for transactions
 def create_transaction_widgets(tab, transaction_type, conn):
-    account_name_label = ttk.Label(tab, text="Account Name:")
+    account_name_label = ctk.CTkLabel(tab, text="Account Name:")
     account_name_label.pack(pady=5)
 
-    account_name_entry = ttk.Entry(tab)
+    account_name_entry = ctk.CTkEntry(tab)
     account_name_entry.pack(pady=5)
 
-    category_label = ttk.Label(tab, text="Category:")
+    category_label = ctk.CTkLabel(tab, text="Category:")
     category_label.pack(pady=5)
 
-    category_entry = ttk.Entry(tab)
+    category_entry = ctk.CTkEntry(tab)
     category_entry.pack(pady=5)
 
-    amount_label = ttk.Label(tab, text="Amount:")
+    amount_label = ctk.CTkLabel(tab, text="Amount:")
     amount_label.pack(pady=5)
 
-    amount_entry = ttk.Entry(tab)
+    amount_entry = ctk.CTkEntry(tab)
     amount_entry.pack(pady=5)
 
-    add_transaction_button = ttk.Button(tab, text=f"Add {transaction_type.capitalize()}", command=lambda: add_transaction(
+    add_transaction_button = ctk.CTkButton(tab, text=f"Add {transaction_type.capitalize()}", command=lambda: add_transaction(
         account_name_entry.get(), category_entry.get(), float(amount_entry.get()), transaction_type, conn))
     add_transaction_button.pack(pady=5)
 
@@ -145,24 +151,25 @@ def update_summary_text(account_name, transaction_type, conn):
     summary_text.config(state=tk.DISABLED)
 
 # Summary Tab
-summary_tab = ttk.Frame(notebook)
+summary_tab = ctk.CTkFrame(notebook)
 notebook.add(summary_tab, text="Display Summary")
 
-summary_account_label = ttk.Label(summary_tab, text="Account Name:")
+summary_account_label = ctk.CTkLabel(summary_tab, text="Account Name:")
 summary_account_label.pack(pady=5)
 
-summary_account_entry = ttk.Entry(summary_tab)
+summary_account_entry = ctk.CTkEntry(summary_tab)
 summary_account_entry.pack(pady=5)
 
-summary_text = tk.Text(summary_tab, height=10, width=40)
+summary_text = ctk.CTkText(summary_tab, height=10, width=40)
 summary_text.pack(pady=5)
 
-display_summary_button = ttk.Button(summary_tab, text="Display Summary", command=lambda: update_summary_text(
+display_summary_button = ctk.CTkButton(summary_tab, text="Display Summary", command=lambda: update_summary_text(
     summary_account_entry.get(), "income", conn))
 display_summary_button.pack(pady=5)
 
 # Function to create a bar chart
 def create_bar_chart(account_name, conn):
+    plt.clf() # Avoid overlap
     cursor = conn.cursor()
     cursor.execute("SELECT id FROM accounts WHERE name = ?", (account_name,))
     account_id = cursor.fetchone()[0]
@@ -186,19 +193,19 @@ def create_bar_chart(account_name, conn):
     plt.clf()
 
 # Budget Analysis Tab
-analysis_tab = ttk.Frame(notebook)
+analysis_tab = ctk.CTkFrame(notebook)
 notebook.add(analysis_tab, text="Budget Analysis")
 
-analysis_account_label = ttk.Label(analysis_tab, text="Account Name:")
+analysis_account_label = ctk.CTkLabel(analysis_tab, text="Account Name:")
 analysis_account_label.pack(pady=5)
 
-analysis_account_entry = ttk.Entry(analysis_tab)
+analysis_account_entry = ctk.CTkEntry(analysis_tab)
 analysis_account_entry.pack(pady=5)
 
-analysis_text = tk.Text(analysis_tab, height=10, width=40)
+analysis_text = ctk.CTkText(analysis_tab, height=10, width=40)
 analysis_text.pack(pady=5)
 
-analysis_button = ttk.Button(analysis_tab, text="Calculate Budget Analysis",
+analysis_button = ctk.CTkButton(analysis_tab, text="Calculate Budget Analysis",
                             command=lambda: budget_analysis(analysis_account_entry.get(), conn))
 analysis_button.pack(pady=5)
 
