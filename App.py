@@ -137,7 +137,8 @@ def create_transaction_widgets(tab, transaction_type):
                                              category_entry.get(),
                                              amount_entry.get(),
                                              transaction_type,
-                                             conn))
+                                             conn),
+                                         bootstyle="success")
     add_transaction_button.pack(pady=10)
 
     # Add Tooltip for clarity
@@ -170,15 +171,17 @@ def update_summary_text(account_name, transaction_type, conn):
 summary_account_label = ttk.Label(summary_tab, text="Account Name:")
 summary_account_label.pack(pady=5)
 
-summary_account_entry = ttk.Entry(summary_tab)
+summary_account_entry = ttk.Entry(summary_tab, width=60)
 summary_account_entry.pack(pady=5)
 
-summary_text = tk.Text(summary_tab, height=10, width=40)
+# Increased width of the text widget
+summary_text = tk.Text(summary_tab, height=10, width=60)
 summary_text.pack(pady=5)
 
 display_summary_button = ttk.Button(summary_tab, text="Display Summary",
                                      command=lambda: update_summary_text(
-                                         summary_account_entry.get(), "income", conn))
+                                         summary_account_entry.get(), "income", conn),
+                                     bootstyle="dark")
 display_summary_button.pack(pady=5)
 
 ToolTip(display_summary_button, text="Show income summary", bootstyle=INFO)
@@ -218,9 +221,16 @@ visualization_account_label.pack(pady=5)
 visualization_account_entry = ttk.Entry(visualization_tab)
 visualization_account_entry.pack(pady=5)
 
+# Create a custom style for the button
+style = ttk.Style()
+style.configure("Custom.TButton", foreground="black", bootstyle="warning")
+
 visualization_button = ttk.Button(visualization_tab, text="Generate Bar Chart",
-                                   command=lambda: create_bar_chart(visualization_account_entry.get(), conn))
+                                   command=lambda: create_bar_chart(visualization_account_entry.get(), conn),
+                                   style="Custom.TButton")
 visualization_button.pack(pady=5)
+
+ToolTip(visualization_button, text="Generate a bar chart for income", bootstyle=INFO)
 
 ToolTip(visualization_button, text="Generate a bar chart for income", bootstyle=INFO)
 
@@ -228,10 +238,11 @@ ToolTip(visualization_button, text="Generate a bar chart for income", bootstyle=
 analysis_account_label = ttk.Label(analysis_tab, text="Account Name:")
 analysis_account_label.pack(pady=5)
 
-analysis_account_entry = ttk.Entry(analysis_tab)
+analysis_account_entry = ttk.Entry(analysis_tab, width=60)
 analysis_account_entry.pack(pady=5)
 
-analysis_text = tk.Text(analysis_tab, height=10, width=40)
+# Increased width of the text widget
+analysis_text = tk.Text(analysis_tab, height=10, width=60)
 analysis_text.pack(pady=5)
 
 # Add a function for budget analysis (currently just a placeholder)
@@ -242,7 +253,8 @@ def budget_analysis(account_name, conn):
     analysis_text.config(state=tk.DISABLED)
 
 analysis_button = ttk.Button(analysis_tab, text="Calculate Budget Analysis",
-                             command=lambda: budget_analysis(analysis_account_entry.get(), conn))
+                             command=lambda: budget_analysis(analysis_account_entry.get(), conn),
+                             bootstyle="danger")  # Red button for budget analysis
 analysis_button.pack(pady=20)
 
 ToolTip(analysis_button, text="Calculate analysis of budget", bootstyle=INFO)
