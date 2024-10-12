@@ -41,29 +41,9 @@ This project is a part of Hacktoberfest, and we're welcoming contributions! Whet
 ---
 
 ## Contributing
-We welcome contributions! Here's how you can get started:
-
-1. Fork the repository.
-2. Create a new branch:
-   ```bash
-   git checkout -b feature-name
-   ```
-3. Make your changes and commit them:
-   ```bash
-   git commit -m "Add new feature"
-   ```
-4. Push your changes:
-   ```bash
-   git push origin feature-name
-   ```
-5. Create a pull request on GitHub.
-
----
-## Contributing
-
 We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) and [Code of Conduct](CODE_OF_CONDUCT.md) for more details.
 
-
+---
 ## To-Do List
 ### Core Functionalities
 1. [x] **Fix the Visuals**: Improve the UI/UX, adjust layout, and ensure the design is clean and user-friendly.
