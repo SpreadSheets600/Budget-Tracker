@@ -1,6 +1,6 @@
-import customtkinter as ctk
+import customtkinter as ctk # Imports coustomTkinter
 import tkinter as tk
-from tkinter import ttk
+import tkinter.font as tkFont
 import sqlite3
 import time
 import os
@@ -22,6 +22,7 @@ def load_to_json():
             return json.load(file)
     except FileNotFoundError:
         return None
+        
         
         
 
@@ -173,7 +174,7 @@ summary_account_label.pack(pady=5)
 summary_account_entry = ctk.CTkEntry(summary_tab)
 summary_account_entry.pack(pady=5)
 
-summary_text = ctk.CTkText(summary_tab, height=10, width=40)
+summary_text = ctk.CTkEntry(summary_tab, height=10, width=40)
 summary_text.pack(pady=5)
 
 display_summary_button = ctk.CTkButton(summary_tab, text="Display Summary", command=lambda: update_summary_text(
@@ -201,7 +202,8 @@ def create_bar_chart(account_name, conn):
     plt.tight_layout()
 
     # Embed the matplotlib figure in the Tkinter window
-    canvas = FigureCanvasTkAgg(plt.gcf(), master=visualization_tab)
+    canvas = FigureCanvasCTkAgg(plt.gcf(), master=visualization_tab)
+    canvas.draw()t
     canvas.get_tk_widget().pack(pady=5)
     plt.clf()
 
@@ -215,7 +217,7 @@ analysis_account_label.pack(pady=5)
 analysis_account_entry = ctk.CTkEntry(analysis_tab)
 analysis_account_entry.pack(pady=5)
 
-analysis_text = ctk.CTkText(analysis_tab, height=10, width=40)
+analysis_text = ctk.CTkLabel(analysis_tab, height=10, width=40)
 analysis_text.pack(pady=5)
 
 analysis_button = ctk.CTkButton(analysis_tab, text="Calculate Budget Analysis",
