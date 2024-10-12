@@ -59,6 +59,10 @@ We welcome contributions! Here's how you can get started:
 5. Create a pull request on GitHub.
 
 ---
+## Contributing
+
+We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) and [Code of Conduct](CODE_OF_CONDUCT.md) for more details.
+
 
 ## To-Do List
 ### Core Functionalities
