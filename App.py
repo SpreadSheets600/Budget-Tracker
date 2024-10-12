@@ -1,15 +1,25 @@
-import customtkinter as ctk
-import tkinter as tk
-from tkinter import ttk
+import customtkinter as ctk  # Imports customTkinter
+import tkinter.font as tkFont
 import sqlite3
 import time
 import os
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
+import json  # Uses json to save and load files to keep data permanent per user login
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from ttkbootstrap import Style  # Importing ttkbootstrap for better styling
 
-# Set the appearance mode and default color theme
-ctk.set_appearance_mode("dark")
+# Initialize ttkbootstrap style
+style = Style(theme='darkly')
+
+ctk.set_appearance_mode("Dark")  # Set color scheme
 ctk.set_default_color_theme("blue")
+
+def load_to_json():
+    try:
+        with open("users.json", "r") as file:
+            return json.load(file)
+    except FileNotFoundError:
+        return None
 
 # Function to create or open the SQLite database
 def create_or_open_database(account_name):
@@ -68,185 +78,192 @@ def create_or_open_database(account_name):
     return conn
 
 # Create the main window
-class BudgetTrackerApp(ctk.CTk):
-    def __init__(self):
-        super().__init__()
-        
-        self.title("Budget Tracker")
-        self.geometry("800x600")
-        
-        # Create a notebook for tabs
-        self.notebook = ctk.CTkTabview(self)
-        self.notebook.pack(fill=tk.BOTH, expand=True, pady=10, padx=10)
-        
-        # Create tabs
-        self.income_tab = self.notebook.add("Add Income")
-        self.expense_tab = self.notebook.add("Add Expense")
-        self.visualization_tab = self.notebook.add("Visualization")
-        self.summary_tab = self.notebook.add("Display Summary")
-        self.analysis_tab = self.notebook.add("Budget Analysis")
-        
-        # Create database connection
-        self.conn = create_or_open_database("Default")
-        
-        # Initialize tabs
-        self.init_transaction_tab(self.income_tab, 'income')
-        self.init_transaction_tab(self.expense_tab, 'expenses')
-        self.init_summary_tab()
-        self.init_visualization_tab()
-        self.init_analysis_tab()
+root = ctk.CTk()  # Change widgets
+root.title("Budget Tracker")
+root.geometry("800x600")
 
-    def init_transaction_tab(self, tab, transaction_type):
-        account_name_label = ctk.CTkLabel(tab, text="Account Name:")
-        account_name_label.pack(pady=5)
-        
-        account_name_entry = ctk.CTkEntry(tab, width=300)
-        account_name_entry.pack(pady=5)
-        
-        category_label = ctk.CTkLabel(tab, text="Category:")
-        category_label.pack(pady=5)
-        
-        category_entry = ctk.CTkEntry(tab, width=300)
-        category_entry.pack(pady=5)
-        
-        amount_label = ctk.CTkLabel(tab, text="Amount:")
-        amount_label.pack(pady=5)
-        
-        amount_entry = ctk.CTkEntry(tab, width=300)
-        amount_entry.pack(pady=5)
-        
-        add_transaction_button = ctk.CTkButton(
-            tab,
-            text=f"Add {transaction_type.capitalize()}",
-            command=lambda: self.add_transaction(
-                account_name_entry.get(),
-                category_entry.get(),
-                amount_entry.get(),
-                transaction_type
-            )
-        )
-        add_transaction_button.pack(pady=10)
+# Create a notebook for tabs
+notebook = ctk.CTkTabView(root)
+notebook.pack(fill=ctk.BOTH, expand=True, pady=5, padx=5)
 
-    def init_summary_tab(self):
-        summary_account_label = ctk.CTkLabel(self.summary_tab, text="Account Name:")
-        summary_account_label.pack(pady=5)
-        
-        self.summary_account_entry = ctk.CTkEntry(self.summary_tab, width=300)
-        self.summary_account_entry.pack(pady=5)
-        
-        self.summary_text = ctk.CTkTextbox(self.summary_tab, height=200, width=400)
-        self.summary_text.pack(pady=5)
-        
-        display_summary_button = ctk.CTkButton(
-            self.summary_tab,
-            text="Display Summary",
-            command=lambda: self.update_summary_text(self.summary_account_entry.get(), "income")
-        )
-        display_summary_button.pack(pady=5)
+# Create tabs for adding income, expenses, and goals
+income_tab = ctk.CTkFrame(notebook)
+expense_tab = ctk.CTkFrame(notebook)
+goals_tab = ctk.CTkFrame(notebook)
 
-    def init_visualization_tab(self):
-        visualization_account_label = ctk.CTkLabel(self.visualization_tab, text="Account Name:")
-        visualization_account_label.pack(pady=5)
-        
-        self.visualization_account_entry = ctk.CTkEntry(self.visualization_tab, width=300)
-        self.visualization_account_entry.pack(pady=5)
-        
-        visualization_button = ctk.CTkButton(
-            self.visualization_tab,
-            text="Generate Bar Chart",
-            command=lambda: self.create_bar_chart(self.visualization_account_entry.get())
-        )
-        visualization_button.pack(pady=5)
+notebook.add(income_tab, text="Add Income")
+notebook.add(expense_tab, text="Add Expense")
 
-    def init_analysis_tab(self):
-        analysis_account_label = ctk.CTkLabel(self.analysis_tab, text="Account Name:")
-        analysis_account_label.pack(pady=5)
-        
-        self.analysis_account_entry = ctk.CTkEntry(self.analysis_tab, width=300)
-        self.analysis_account_entry.pack(pady=5)
-        
-        self.analysis_text = ctk.CTkTextbox(self.analysis_tab, height=200, width=400)
-        self.analysis_text.pack(pady=5)
-        
-        analysis_button = ctk.CTkButton(
-            self.analysis_tab,
-            text="Calculate Budget Analysis",
-            command=lambda: self.budget_analysis(self.analysis_account_entry.get())
-        )
-        analysis_button.pack(pady=20)
+# Create a frame for the "Visualization" tab
+visualization_tab = ctk.CTkFrame(notebook)
+notebook.add(visualization_tab, text="Visualization")
 
-    def add_transaction(self, account_name, category, amount, transaction_type):
-        try:
-            timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
-            cursor = self.conn.cursor()
-            cursor.execute("SELECT id FROM accounts WHERE name = ?", (account_name,))
-            account_id = cursor.fetchone()
-            if account_id is None:
-                cursor.execute("INSERT INTO accounts (name) VALUES (?)", (account_name,))
-                self.conn.commit()
-                account_id = cursor.lastrowid
-            else:
-                account_id = account_id[0]
-            cursor.execute(f"INSERT INTO {transaction_type} (account_id, category, amount, currency, date) VALUES (?, ?, ?, ?, ?)",
-                           (account_id, category, float(amount), 'USD', timestamp))
-            self.conn.commit()
-            self.update_summary_text(account_name, transaction_type)
-        except ValueError:
-            print("Invalid amount")
-        except Exception as e:
-            print(f"Error adding transaction: {e}")
-
-    def update_summary_text(self, account_name, transaction_type):
-        cursor = self.conn.cursor()
+# Function to add income or expense
+def add_transaction(account_name, category, amount, transaction_type, conn):
+    try:
+        timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
+        cursor = conn.cursor()
         cursor.execute("SELECT id FROM accounts WHERE name = ?", (account_name,))
-        account_id = cursor.fetchone()
-        
-        if account_id is not None:
-            account_id = account_id[0]
-            cursor.execute(f"SELECT category, amount FROM {transaction_type} WHERE account_id = ?", (account_id,))
-            data = cursor.fetchall()
-            
-            self.summary_text.delete("0.0", tk.END)
-            self.summary_text.insert("0.0", f"Summary for Account: {account_name}\n\n")
-            self.summary_text.insert(tk.END, f"{transaction_type.capitalize()}:\n")
-            for item in data:
-                self.summary_text.insert(tk.END, f"{item[0]}: ${item[1]:.2f}\n")
-        else:
-            self.summary_text.delete("0.0", tk.END)
-            self.summary_text.insert("0.0", f"No account found with name: {account_name}")
+        account_id = cursor.fetchone()[0]
+        cursor.execute(f"INSERT INTO {transaction_type} (account_id, category, amount, currency, date) VALUES (?, ?, ?, ?, ?)",
+                       (account_id, category, amount, 'USD', timestamp))
+        conn.commit()
+        update_summary_text(account_name, transaction_type, conn)
+    except ValueError:
+        print("Invalid amount")
 
-    def create_bar_chart(self, account_name):
-        plt.clf()  # Avoid overlap
-        cursor = self.conn.cursor()
-        cursor.execute("SELECT id FROM accounts WHERE name = ?", (account_name,))
-        account_id = cursor.fetchone()
-        
-        if account_id is not None:
-            account_id = account_id[0]
-            cursor.execute("SELECT category, amount FROM income WHERE account_id = ?", (account_id,))
-            data = cursor.fetchall()
-            categories = [item[0] for item in data]
-            amounts = [item[1] for item in data]
-            
-            plt.figure(figsize=(8, 6))
-            plt.bar(categories, amounts, color="#5DADE2")
-            plt.xlabel('Category')
-            plt.ylabel('Amount (USD)')
-            plt.title('Income by Category')
-            plt.xticks(rotation=45, ha='right')
-            plt.tight_layout()
-            
-            # Embed the matplotlib figure in the CustomTkinter window
-            canvas = FigureCanvasTkAgg(plt.gcf(), master=self.visualization_tab)
-            canvas.draw()
-            canvas.get_tk_widget().pack(pady=20)
-        else:
-            print("Account not found for bar chart.")
+# Create labels and entry fields for transactions
+def create_transaction_widgets(tab, transaction_type, conn):
+    account_name_label = ctk.CTkLabel(tab, text="Account Name:")
+    account_name_label.pack(pady=5)
 
-    def budget_analysis(self, account_name):
-        self.analysis_text.delete("0.0", tk.END)
-        self.analysis_text.insert("0.0", f"Budget analysis for {account_name} will be implemented.\n")
+    account_name_entry = ctk.CTkEntry(tab)
+    account_name_entry.pack(pady=5)
 
-if __name__ == "__main__":
-    app = BudgetTrackerApp()
-    app.mainloop()
+    category_label = ctk.CTkLabel(tab, text="Category:")
+    category_label.pack(pady=5)
+
+    category_entry = ctk.CTkEntry(tab)
+    category_entry.pack(pady=5)
+
+    amount_label = ctk.CTkLabel(tab, text="Amount:")
+    amount_label.pack(pady=5)
+
+    amount_entry = ctk.CTkEntry(tab)
+    amount_entry.pack(pady=5)
+
+    add_transaction_button = ctk.CTkButton(tab, text=f"Add {transaction_type.capitalize()}",
+                                             command=lambda: add_transaction(
+                                                 account_name_entry.get(), category_entry.get(),
+                                                 float(amount_entry.get()), transaction_type, conn))
+    add_transaction_button.pack(pady=5)
+
+# Create widgets for income and expenses tabs
+conn = create_or_open_database("Default")
+create_transaction_widgets(income_tab, 'income', conn)
+create_transaction_widgets(expense_tab, 'expenses', conn)
+
+# Function to update the summary text
+def update_summary_text(account_name, transaction_type, conn):
+    cursor = conn.cursor()
+    cursor.execute("SELECT id FROM accounts WHERE name = ?", (account_name,))
+    account_id = cursor.fetchone()[0]
+    cursor.execute(f"SELECT category, amount FROM {transaction_type} WHERE account_id = ?", (account_id,))
+    data = cursor.fetchall()
+
+    summary_text.config(state=tk.NORMAL)
+    summary_text.delete(1.0, tk.END)
+    summary_text.insert(tk.END, f"Summary for Account: {account_name}\n\n")
+    summary_text.insert(tk.END, f"{transaction_type.capitalize()}:\n")
+    for item in data:
+        summary_text.insert(tk.END, f"{item[0]}: ${item[1]:.2f}\n")
+    summary_text.config(state=tk.DISABLED)
+
+# Summary Tab
+summary_tab = ctk.CTkFrame(notebook)
+notebook.add(summary_tab, text="Display Summary")
+
+summary_account_label = ctk.CTkLabel(summary_tab, text="Account Name:")
+summary_account_label.pack(pady=5)
+
+summary_account_entry = ctk.CTkEntry(summary_tab)
+summary_account_entry.pack(pady=5)
+
+summary_text = ctk.CTkTextbox(summary_tab, height=10, width=40)  # Changed to CTkTextbox for multi-line text
+summary_text.pack(pady=5)
+
+display_summary_button = ctk.CTkButton(summary_tab, text="Display Summary", command=lambda: update_summary_text(
+    summary_account_entry.get(), "income", conn))
+display_summary_button.pack(pady=5)
+
+# Function to create a bar chart
+def create_bar_chart(account_name, conn):
+    plt.clf()  # Avoid overlap
+    cursor = conn.cursor()
+    cursor.execute("SELECT id FROM accounts WHERE name = ?", (account_name,))
+    account_id = cursor.fetchone()[0]
+    cursor.execute(
+        "SELECT category, amount FROM income WHERE account_id = ?", (account_id,))
+    data = cursor.fetchall()
+    categories = [item[0] for item in data]
+    amounts = [item[1] for item in data]
+
+    plt.figure(figsize=(8, 6))
+    plt.bar(categories, amounts)
+    plt.xlabel('Category')
+    plt.ylabel('Amount (USD)')
+    plt.title('Income by Category')
+    plt.xticks(rotation=45, ha='right')
+    plt.tight_layout()
+
+    # Embed the matplotlib figure in the Tkinter window
+    canvas = FigureCanvasTkAgg(plt.gcf(), master=visualization_tab)
+    canvas.draw()
+    canvas.get_tk_widget().pack(pady=5)
+
+# Budget Analysis Tab
+analysis_tab = ctk.CTkFrame(notebook)
+notebook.add(analysis_tab, text="Budget Analysis")
+
+analysis_account_label = ctk.CTkLabel(analysis_tab, text="Account Name:")
+analysis_account_label.pack(pady=5)
+
+analysis_account_entry = ctk.CTkEntry(analysis_tab)
+analysis_account_entry.pack(pady=5)
+
+analysis_text = ctk.CTkLabel(analysis_tab, text="Budget Analysis Result:")  # Updated label for clarity
+analysis_text.pack(pady=5)
+
+analysis_button = ctk.CTkButton(analysis_tab, text="Calculate Budget Analysis",
+                                 command=lambda: budget_analysis(analysis_account_entry.get(), conn))
+analysis_button.pack(pady=5)
+
+# Function to save user data
+def save_to_json(account_name, conn):
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT category, amount, currency, date FROM income WHERE account_id = (SELECT id FROM accounts WHERE name = ?)", (account_name,))
+    income_data = cursor.fetchall()
+
+    cursor.execute("SELECT category, amount, currency, date FROM expenses WHERE account_id = (SELECT id FROM accounts WHERE name = ?)", (account_name,))
+    expense_data = cursor.fetchall()
+
+    cursor.execute("SELECT category, amount, currency, date FROM goals WHERE account_id = (SELECT id FROM accounts WHERE name = ?)", (account_name,))
+    goal_data = cursor.fetchall()
+
+    # Data stored via dictionary
+    data = {
+        "income": [{"category": item[0], "amount": item[1], "currency": item[2], "date": item[3]} for item in income_data],
+        "expenses": [{"category": item[0], "amount": item[1], "currency": item[2], "date": item[3]} for item in expense_data],
+        "goals": [{"category": item[0], "amount": item[1], "currency": item[2], "date": item[3]} for item in goal_data],
+    }
+
+    with open(f"{account_name}.json", "w") as json_file:
+        json.dump(data, json_file)
+
+# Function to load user data
+def load_user_data(account_name):
+    try:
+        with open(f"{account_name}.json", "r") as json_file:
+            data = json.load(json_file)
+            # Load income data
+            for item in data.get("income", []):
+                add_transaction(account_name, item["category"], item["amount"], "income", conn)
+            # Load expense data
+            for item in data.get("expenses", []):
+                add_transaction(account_name, item["category"], item["amount"], "expenses", conn)
+            # Load goal data
+            for item in data.get("goals", []):
+                add_transaction(account_name, item["category"], item["amount"], "goals", conn)
+    except FileNotFoundError:
+        print("User data file not found")
+
+# Load user data when the application starts
+user_data = load_to_json()
+if user_data:
+    for account in user_data.get("accounts", []):
+        conn = create_or_open_database(account)
+
+# Main loop
+root.mainloop()
+
