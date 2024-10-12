@@ -1,20 +1,18 @@
-import customtkinter as ctk # Imports coustomTkinter
-import tkinter as tk
+import customtkinter as ctk  # Imports customTkinter
 import tkinter.font as tkFont
 import sqlite3
 import time
 import os
 import matplotlib.pyplot as plt
-import json # Uses json to save and load files to keep data permanentper user login
+import json  # Uses json to save and load files to keep data permanent per user login
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from ttkbootstrap import Style  # Importing ttkbootstrap for better styling
 
+# Initialize ttkbootstrap style
+style = Style(theme='darkly')
 
-
-
-# Set the appearance mode and default color theme
-ctk.set_appearance_mode("dark")
+ctk.set_appearance_mode("Dark")  # Set color scheme
 ctk.set_default_color_theme("blue")
-
 
 def load_to_json():
     try:
@@ -22,9 +20,6 @@ def load_to_json():
             return json.load(file)
     except FileNotFoundError:
         return None
-        
-        
-        
 
 # Function to create or open the SQLite database
 def create_or_open_database(account_name):
@@ -83,7 +78,7 @@ def create_or_open_database(account_name):
     return conn
 
 # Create the main window
-root = ctk.CTk() # Change widgets
+root = ctk.CTk()  # Change widgets
 root.title("Budget Tracker")
 root.geometry("800x600")
 
@@ -111,12 +106,11 @@ def add_transaction(account_name, category, amount, transaction_type, conn):
         cursor.execute("SELECT id FROM accounts WHERE name = ?", (account_name,))
         account_id = cursor.fetchone()[0]
         cursor.execute(f"INSERT INTO {transaction_type} (account_id, category, amount, currency, date) VALUES (?, ?, ?, ?, ?)",
-                   (account_id, category, amount, 'USD', timestamp))
+                       (account_id, category, amount, 'USD', timestamp))
         conn.commit()
         update_summary_text(account_name, transaction_type, conn)
     except ValueError:
         print("Invalid amount")
-        
 
 # Create labels and entry fields for transactions
 def create_transaction_widgets(tab, transaction_type, conn):
@@ -138,8 +132,10 @@ def create_transaction_widgets(tab, transaction_type, conn):
     amount_entry = ctk.CTkEntry(tab)
     amount_entry.pack(pady=5)
 
-    add_transaction_button = ctk.CTkButton(tab, text=f"Add {transaction_type.capitalize()}", command=lambda: add_transaction(
-        account_name_entry.get(), category_entry.get(), float(amount_entry.get()), transaction_type, conn))
+    add_transaction_button = ctk.CTkButton(tab, text=f"Add {transaction_type.capitalize()}",
+                                             command=lambda: add_transaction(
+                                                 account_name_entry.get(), category_entry.get(),
+                                                 float(amount_entry.get()), transaction_type, conn))
     add_transaction_button.pack(pady=5)
 
 # Create widgets for income and expenses tabs
@@ -152,8 +148,7 @@ def update_summary_text(account_name, transaction_type, conn):
     cursor = conn.cursor()
     cursor.execute("SELECT id FROM accounts WHERE name = ?", (account_name,))
     account_id = cursor.fetchone()[0]
-    cursor.execute(
-        f"SELECT category, amount FROM {transaction_type} WHERE account_id = ?", (account_id,))
+    cursor.execute(f"SELECT category, amount FROM {transaction_type} WHERE account_id = ?", (account_id,))
     data = cursor.fetchall()
 
     summary_text.config(state=tk.NORMAL)
@@ -174,7 +169,7 @@ summary_account_label.pack(pady=5)
 summary_account_entry = ctk.CTkEntry(summary_tab)
 summary_account_entry.pack(pady=5)
 
-summary_text = ctk.CTkEntry(summary_tab, height=10, width=40)
+summary_text = ctk.CTkTextbox(summary_tab, height=10, width=40)  # Changed to CTkTextbox for multi-line text
 summary_text.pack(pady=5)
 
 display_summary_button = ctk.CTkButton(summary_tab, text="Display Summary", command=lambda: update_summary_text(
@@ -183,7 +178,7 @@ display_summary_button.pack(pady=5)
 
 # Function to create a bar chart
 def create_bar_chart(account_name, conn):
-    plt.clf() # Avoid overlap
+    plt.clf()  # Avoid overlap
     cursor = conn.cursor()
     cursor.execute("SELECT id FROM accounts WHERE name = ?", (account_name,))
     account_id = cursor.fetchone()[0]
@@ -202,10 +197,9 @@ def create_bar_chart(account_name, conn):
     plt.tight_layout()
 
     # Embed the matplotlib figure in the Tkinter window
-    canvas = FigureCanvasCTkAgg(plt.gcf(), master=visualization_tab)
-    canvas.draw()t
+    canvas = FigureCanvasTkAgg(plt.gcf(), master=visualization_tab)
+    canvas.draw()
     canvas.get_tk_widget().pack(pady=5)
-    plt.clf()
 
 # Budget Analysis Tab
 analysis_tab = ctk.CTkFrame(notebook)
@@ -217,46 +211,59 @@ analysis_account_label.pack(pady=5)
 analysis_account_entry = ctk.CTkEntry(analysis_tab)
 analysis_account_entry.pack(pady=5)
 
-analysis_text = ctk.CTkLabel(analysis_tab, height=10, width=40)
+analysis_text = ctk.CTkLabel(analysis_tab, text="Budget Analysis Result:")  # Updated label for clarity
 analysis_text.pack(pady=5)
 
 analysis_button = ctk.CTkButton(analysis_tab, text="Calculate Budget Analysis",
-                            command=lambda: budget_analysis(analysis_account_entry.get(), conn))
+                                 command=lambda: budget_analysis(analysis_account_entry.get(), conn))
 analysis_button.pack(pady=5)
-
-def budget_analysis(self, account_name):
-    self.analysis_text.delete("0.0", tk.END)
-    self.analysis_text.insert("0.0", f"Budget analysis for {account_name} will be implemented.\n")
 
 # Function to save user data
 def save_to_json(account_name, conn):
     cursor = conn.cursor()
-    
-    cursor.execute("SELECT category, amount, currency, date FROM income WHERE account_id = (SELECT id FROM accounts WHERE name = ?)", account_name,)
+
+    cursor.execute("SELECT category, amount, currency, date FROM income WHERE account_id = (SELECT id FROM accounts WHERE name = ?)", (account_name,))
     income_data = cursor.fetchall()
-    
-    cursor.execute("SELECT category, amount, currency, date FROM expenses WHERE account_id = (SELECT id FROM accounts WHERE name = ?)", account_name,)
+
+    cursor.execute("SELECT category, amount, currency, date FROM expenses WHERE account_id = (SELECT id FROM accounts WHERE name = ?)", (account_name,))
     expense_data = cursor.fetchall()
-    
-    cursor.execute("SELECT category, amount, currency, date FROM goals WHERE account_id = (SELECT id FROM accounts WHERE name = ?)", account_name,)
+
+    cursor.execute("SELECT category, amount, currency, date FROM goals WHERE account_id = (SELECT id FROM accounts WHERE name = ?)", (account_name,))
     goal_data = cursor.fetchall()
-    
-    # data stored via dictionary
+
+    # Data stored via dictionary
     data = {
-    "income": [{"category": item[0], "amount": item[1], "currency": item[2], "date": item[3]} for item in income_data],
-    "expenses": [{"category": item[0], "amount": item[1], "currency": item[2], "date": item[3]} for item in expense_data],
-    "goals": [{"category": item[0], "amount": item[1], "currency": item[2], "date": item[3]} for item in goal_data]
+        "income": [{"category": item[0], "amount": item[1], "currency": item[2], "date": item[3]} for item in income_data],
+        "expenses": [{"category": item[0], "amount": item[1], "currency": item[2], "date": item[3]} for item in expense_data],
+        "goals": [{"category": item[0], "amount": item[1], "currency": item[2], "date": item[3]} for item in goal_data],
     }
-    
+
     with open(f"{account_name}.json", "w") as json_file:
-        json.dump(data, json_file, indent = 4)
-        
+        json.dump(data, json_file)
 
-    
-        
-        
+# Function to load user data
+def load_user_data(account_name):
+    try:
+        with open(f"{account_name}.json", "r") as json_file:
+            data = json.load(json_file)
+            # Load income data
+            for item in data.get("income", []):
+                add_transaction(account_name, item["category"], item["amount"], "income", conn)
+            # Load expense data
+            for item in data.get("expenses", []):
+                add_transaction(account_name, item["category"], item["amount"], "expenses", conn)
+            # Load goal data
+            for item in data.get("goals", []):
+                add_transaction(account_name, item["category"], item["amount"], "goals", conn)
+    except FileNotFoundError:
+        print("User data file not found")
 
-    
+# Load user data when the application starts
+user_data = load_to_json()
+if user_data:
+    for account in user_data.get("accounts", []):
+        conn = create_or_open_database(account)
 
-# Main Loop
+# Main loop
 root.mainloop()
+
