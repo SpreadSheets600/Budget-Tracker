@@ -1,4 +1,5 @@
 import customtkinter as ctk  # Imports customTkinter
+import tkinter as tk
 import tkinter.font as tkFont
 import sqlite3
 import time
@@ -83,20 +84,20 @@ root.title("Budget Tracker")
 root.geometry("800x600")
 
 # Create a notebook for tabs
-notebook = ctk.CTkTabView(root)
+notebook = ctk.CTkTabview(root)
 notebook.pack(fill=ctk.BOTH, expand=True, pady=5, padx=5)
 
 # Create tabs for adding income, expenses, and goals
-income_tab = ctk.CTkFrame(notebook)
-expense_tab = ctk.CTkFrame(notebook)
-goals_tab = ctk.CTkFrame(notebook)
-
-notebook.add(income_tab, text="Add Income")
-notebook.add(expense_tab, text="Add Expense")
+notebook.add("Income")
+notebook.add("Expenses")
+notebook.add("Goals")
+income_tab = notebook.tab("Income")
+expense_tab = notebook.tab("Expenses")
+goals_tab = notebook.tab("Goals")
 
 # Create a frame for the "Visualization" tab
-visualization_tab = ctk.CTkFrame(notebook)
-notebook.add(visualization_tab, text="Visualization")
+notebook.add("Visualization")
+visualization_tab = notebook.tab("Visualization")
 
 # Function to add income or expense
 def add_transaction(account_name, category, amount, transaction_type, conn):
@@ -160,8 +161,8 @@ def update_summary_text(account_name, transaction_type, conn):
     summary_text.config(state=tk.DISABLED)
 
 # Summary Tab
-summary_tab = ctk.CTkFrame(notebook)
-notebook.add(summary_tab, text="Display Summary")
+notebook.add("Summary")
+summary_tab = notebook.tab("Summary")
 
 summary_account_label = ctk.CTkLabel(summary_tab, text="Account Name:")
 summary_account_label.pack(pady=5)
@@ -202,9 +203,10 @@ def create_bar_chart(account_name, conn):
     canvas.get_tk_widget().pack(pady=5)
 
 # Budget Analysis Tab
-analysis_tab = ctk.CTkFrame(notebook)
-notebook.add(analysis_tab, text="Budget Analysis")
+notebook.add("Budget Analysis")
+analysis_tab = notebook.tab("Budget Analysis")
 
+# Add widgets to the tab
 analysis_account_label = ctk.CTkLabel(analysis_tab, text="Account Name:")
 analysis_account_label.pack(pady=5)
 
@@ -214,8 +216,16 @@ analysis_account_entry.pack(pady=5)
 analysis_text = ctk.CTkLabel(analysis_tab, text="Budget Analysis Result:")  # Updated label for clarity
 analysis_text.pack(pady=5)
 
-analysis_button = ctk.CTkButton(analysis_tab, text="Calculate Budget Analysis",
-                                 command=lambda: budget_analysis(analysis_account_entry.get(), conn))
+# Define the budget_analysis function
+def budget_analysis(account_name, conn):
+    print(f"Calculating budget analysis for: {account_name}")
+
+# Add a button to trigger budget analysis
+analysis_button = ctk.CTkButton(
+    analysis_tab,
+    text="Calculate Budget Analysis",
+    command=lambda: budget_analysis(analysis_account_entry.get(), conn)
+)
 analysis_button.pack(pady=5)
 
 # Function to save user data
