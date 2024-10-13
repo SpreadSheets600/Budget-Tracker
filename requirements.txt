@@ -6,5 +6,3 @@ numpy
 pandas
 Pillow
 scipy
-tkinter
-sqlite3
