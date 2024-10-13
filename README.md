@@ -29,11 +29,26 @@ This project is a part of Hacktoberfest, and we're welcoming contributions! Whet
    ```bash
    git clone https://github.com/your-repo/budget-tracker.git
    ```
-2. Install the necessary dependencies:
+2. Create virtual environment
+   ```bash
+   python -m venv env
+         or
+   peotry init
+   ```
+3. Activate Virtual Environment
+   ```bash
+   source env/bin/activate
+         or
+   poetry shell
+   ```
+
+4. Install the necessary dependencies:
    ```bash
    pip install -r requirements.txt
+         or
+   poetry install
    ```
-3. Run the application:
+5. Run the application:
    ```bash
    python App.py
    ```
