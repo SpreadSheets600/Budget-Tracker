@@ -1,16 +1,13 @@
 import customtkinter as ctk
 import tkinter as tk
-from tkinter import ttk, messagebox
+from tkinter import ttk
 import sqlite3
 import time
 import os
-import json
 import matplotlib.pyplot as plt
+import json
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from ttkbootstrap import Style
 
-# Set up appearance and style
-style = Style(theme="darkly")
 ctk.set_appearance_mode("Dark")
 ctk.set_default_color_theme("blue")
 
@@ -19,44 +16,63 @@ def load_to_json():
         with open("users.json", "r") as file:
             return json.load(file)
     except FileNotFoundError:
-        return {"accounts": []}
+        return None
 
+# Function to create or open the SQLite database
 def create_or_open_database(account_name):
     db_name = f"{account_name}.db"
-    conn = sqlite3.connect(db_name)
-    cursor = conn.cursor()
-    cursor.execute("PRAGMA foreign_keys = 1")
+    if os.path.exists(db_name):
+        conn = sqlite3.connect(db_name)
+    else:
+        conn = sqlite3.connect(db_name)
+        cursor = conn.cursor()
+        cursor.execute("PRAGMA foreign_keys = 1")
 
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS accounts (
-            id INTEGER PRIMARY KEY, name TEXT UNIQUE
-        )
-    """)
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS income (
-            id INTEGER PRIMARY KEY, account_id INTEGER, category TEXT, amount REAL,
-            currency TEXT, date TEXT, FOREIGN KEY (account_id) REFERENCES accounts (id)
-        )
-    """)
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS expenses (
-            id INTEGER PRIMARY KEY, account_id INTEGER, category TEXT, amount REAL,
-            currency TEXT, date TEXT, FOREIGN KEY (account_id) REFERENCES accounts (id)
-        )
-    """)
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS goals (
-            id INTEGER PRIMARY KEY, account_id INTEGER, category TEXT, amount REAL,
-            currency TEXT, date TEXT, FOREIGN KEY (account_id) REFERENCES accounts (id)
-        )
-    """)
-    cursor.execute("INSERT OR IGNORE INTO accounts (name) VALUES (?)", (account_name,))
-    conn.commit()
+        # Create tables for income, expenses, and goals
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS accounts (
+                id INTEGER PRIMARY KEY,
+                name TEXT
+            )
+        """)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS income (
+                id INTEGER PRIMARY KEY,
+                account_id INTEGER,
+                category TEXT,
+                amount REAL,
+                currency TEXT,
+                date TEXT,
+                FOREIGN KEY (account_id) REFERENCES accounts (id)
+            )
+        """)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS expenses (
+                id INTEGER PRIMARY KEY,
+                account_id INTEGER,
+                category TEXT,
+                amount REAL,
+                currency TEXT,
+                date TEXT,
+                FOREIGN KEY (account_id) REFERENCES accounts (id)
+            )
+        """)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS goals (
+                id INTEGER PRIMARY KEY,
+                account_id INTEGER,
+                category TEXT,
+                amount REAL,
+                currency TEXT,
+                date TEXT,
+                FOREIGN KEY (account_id) REFERENCES accounts (id)
+            )
+        """)
+
+        cursor.execute("INSERT INTO accounts (name) VALUES (?)", (account_name,))
+        conn.commit()
+
     return conn
-
-# Helper function for error notifications
-def show_error(message):
-    messagebox.showerror("Error", message)
 
 class BudgetTrackerApp(ctk.CTk):
     def __init__(self):
@@ -238,57 +254,46 @@ class BudgetTrackerApp(ctk.CTk):
             widget.grid_forget()
         frame.grid(row=0, column=0, sticky="nsew")
 
-    def add_transaction(self, account_name, category, amount, transaction_type):
-        if not account_name or not category or amount <= 0:
-            show_error("Please provide valid inputs for account name, category, and amount.")
-            return
-
-        conn = create_or_open_database(account_name)
-        cursor = conn.cursor()
-        timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
+    def add_income(self):
+        account = self.income_account_entry.get()
+        category = self.income_category_entry.get()
+        amount = self.income_amount_entry.get()
         
-        cursor.execute("SELECT id FROM accounts WHERE name = ?", (account_name,))
-        account_id = cursor.fetchone()
-
-        if not account_id:
-            cursor.execute("INSERT INTO accounts (name) VALUES (?)", (account_name,))
-            conn.commit()
-            cursor.execute("SELECT id FROM accounts WHERE name = ?", (account_name,))
-            account_id = cursor.fetchone()
-
-        account_id = account_id[0]
-        cursor.execute(
-            f"INSERT INTO {transaction_type} (account_id, category, amount, currency, date) "
-            "VALUES (?, ?, ?, ?, ?)",
-            (account_id, category, amount, "USD", timestamp),
-        )
+        # Add income to database
+        conn = create_or_open_database(account)
+        cursor = conn.cursor()
+        cursor.execute("INSERT INTO income (account_id, category, amount, currency, date) VALUES ((SELECT id FROM accounts WHERE name = ?), ?, ?, 'USD', ?)",
+                       (account, category, amount, time.strftime("%Y-%m-%d %H:%M:%S")))
         conn.commit()
         conn.close()
 
-    def add_income(self):
-        self.add_transaction(
-            self.income_account_entry.get(),
-            self.income_category_entry.get(),
-            float(self.income_amount_entry.get() or 0),
-            "income"
-        )
-        # Clear input fields and show confirmation message
+        # Clear input fields
         self.income_account_entry.delete(0, 'end')
         self.income_category_entry.delete(0, 'end')
         self.income_amount_entry.delete(0, 'end')
+
+        # Show confirmation message
         ctk.CTkMessagebox(title="Success", message="Income added successfully!")
 
     def add_expense(self):
-        self.add_transaction(
-            self.expense_account_entry.get(),
-            self.expense_category_entry.get(),
-            float(self.expense_amount_entry.get() or 0),
-            "expenses"
-        )
-        # Clear input fields and show confirmation message
+        account = self.expense_account_entry.get()
+        category = self.expense_category_entry.get()
+        amount = self.expense_amount_entry.get()
+        
+        # Add expense to database
+        conn = create_or_open_database(account)
+        cursor = conn.cursor()
+        cursor.execute("INSERT INTO expenses (account_id, category, amount, currency, date) VALUES ((SELECT id FROM accounts WHERE name = ?), ?, ?, 'USD', ?)",
+                       (account, category, amount, time.strftime("%Y-%m-%d %H:%M:%S")))
+        conn.commit()
+        conn.close()
+
+        # Clear input fields
         self.expense_account_entry.delete(0, 'end')
         self.expense_category_entry.delete(0, 'end')
         self.expense_amount_entry.delete(0, 'end')
+
+        # Show confirmation message
         ctk.CTkMessagebox(title="Success", message="Expense added successfully!")
 
     def generate_chart(self):
@@ -345,106 +350,13 @@ class BudgetTrackerApp(ctk.CTk):
         canvas.draw()
 
     def update_summary(self):
-        account = self.summary_account_entry.get()
-        if not account:
-            show_error("Please enter an account name.")
-            return
-
-        conn = create_or_open_database(account)
-        cursor = conn.cursor()
-
-        # Fetch income data
-        cursor.execute("SELECT SUM(amount) FROM income WHERE account_id = (SELECT id FROM accounts WHERE name = ?)", (account,))
-        total_income = cursor.fetchone()[0] or 0
-
-        # Fetch expense data
-        cursor.execute("SELECT SUM(amount) FROM expenses WHERE account_id = (SELECT id FROM accounts WHERE name = ?)", (account,))
-        total_expenses = cursor.fetchone()[0] or 0
-
-        # Fetch top 5 income categories
-        cursor.execute("SELECT category, SUM(amount) FROM income WHERE account_id = (SELECT id FROM accounts WHERE name = ?) GROUP BY category ORDER BY SUM(amount) DESC LIMIT 5", (account,))
-        top_income_categories = cursor.fetchall()
-
-        # Fetch top 5 expense categories
-        cursor.execute("SELECT category, SUM(amount) FROM expenses WHERE account_id = (SELECT id FROM accounts WHERE name = ?) GROUP BY category ORDER BY SUM(amount) DESC LIMIT 5", (account,))
-        top_expense_categories = cursor.fetchall()
-
-        conn.close()
-
-        # Clear previous summary
-        self.summary_text.delete("1.0", ctk.END)
-
-        # Update summary text
-        summary = f"Summary for Account: {account}\n\n"
-        summary += f"Total Income: ${total_income:.2f}\n"
-        summary += f"Total Expenses: ${total_expenses:.2f}\n"
-        summary += f"Net Balance: ${total_income - total_expenses:.2f}\n\n"
-
-        summary += "Top 5 Income Categories:\n"
-        for category, amount in top_income_categories:
-            summary += f"  {category}: ${amount:.2f}\n"
-
-        summary += "\nTop 5 Expense Categories:\n"
-        for category, amount in top_expense_categories:
-            summary += f"  {category}: ${amount:.2f}\n"
-
-        self.summary_text.insert(ctk.END, summary)
+        # Implement summary update logic here
+        ctk.CTkMessagebox(title="Info", message="Summary update not implemented yet.")
 
     def perform_analysis(self):
-        account = self.analysis_account_entry.get()
-        if not account:
-            show_error("Please enter an account name.")
-            return
-
-        conn = create_or_open_database(account)
-        cursor = conn.cursor()
-
-        # Fetch total income and expenses
-        cursor.execute("SELECT SUM(amount) FROM income WHERE account_id = (SELECT id FROM accounts WHERE name = ?)", (account,))
-        total_income = cursor.fetchone()[0] or 0
-
-        cursor.execute("SELECT SUM(amount) FROM expenses WHERE account_id = (SELECT id FROM accounts WHERE name = ?)", (account,))
-        total_expenses = cursor.fetchone()[0] or 0
-
-        # Calculate savings rate
-        savings_rate = ((total_income - total_expenses) / total_income) * 100 if total_income > 0 else 0
-
-        # Fetch top expense categories
-        cursor.execute("SELECT category, SUM(amount) FROM expenses WHERE account_id = (SELECT id FROM accounts WHERE name = ?) GROUP BY category ORDER BY SUM(amount) DESC LIMIT 3", (account,))
-        top_expenses = cursor.fetchall()
-
-        conn.close()
-
-        # Prepare analysis text
-        analysis = f"Budget Analysis for Account: {account}\n\n"
-        analysis += f"Total Income: ${total_income:.2f}\n"
-        analysis += f"Total Expenses: ${total_expenses:.2f}\n"
-        analysis += f"Net Savings: ${total_income - total_expenses:.2f}\n"
-        analysis += f"Savings Rate: {savings_rate:.2f}%\n\n"
-
-        analysis += "Top 3 Expense Categories:\n"
-        for category, amount in top_expenses:
-            percentage = (amount / total_expenses) * 100 if total_expenses > 0 else 0
-            analysis += f"  {category}: ${amount:.2f} ({percentage:.2f}% of total expenses)\n"
-
-        # Provide some basic advice
-        if savings_rate < 20:
-            analysis += "\nAdvice: Consider reducing expenses to increase your savings rate."
-        elif savings_rate >= 20 and savings_rate < 50:
-            analysis += "\nAdvice: You're doing well! Consider setting specific savings goals."
-        else:
-            analysis += "\nAdvice: Excellent savings rate! Make sure you're investing wisely."
-
-        # Update the analysis text
-        self.analysis_text.configure(text=analysis)
+        # Implement budget analysis logic here
+        ctk.CTkMessagebox(title="Info", message="Budget analysis not implemented yet.")
 
 if __name__ == "__main__":
     app = BudgetTrackerApp()
-    
-    # Loading user data and initializing app with accounts
-    user_data = load_to_json()
-    if user_data:
-        for account in user_data.get("accounts", []):
-            create_or_open_database(account)
-    
     app.mainloop()
