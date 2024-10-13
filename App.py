@@ -19,62 +19,39 @@ def load_to_json():
         with open("users.json", "r") as file:
             return json.load(file)
     except FileNotFoundError:
-        return None
+        return {"accounts": []}
 
-# Function to create or open the SQLite database
 def create_or_open_database(account_name):
     db_name = f"{account_name}.db"
-    if os.path.exists(db_name):
-        conn = sqlite3.connect(db_name)
-    else:
-        conn = sqlite3.connect(db_name)
-        cursor = conn.cursor()
-        cursor.execute("PRAGMA foreign_keys = 1")
+    conn = sqlite3.connect(db_name)
+    cursor = conn.cursor()
+    cursor.execute("PRAGMA foreign_keys = 1")
 
-        # Create tables for income, expenses, and goals
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS accounts (
-                id INTEGER PRIMARY KEY,
-                name TEXT
-            )
-        """)
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS income (
-                id INTEGER PRIMARY KEY,
-                account_id INTEGER,
-                category TEXT,
-                amount REAL,
-                currency TEXT,
-                date TEXT,
-                FOREIGN KEY (account_id) REFERENCES accounts (id)
-            )
-        """)
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS expenses (
-                id INTEGER PRIMARY KEY,
-                account_id INTEGER,
-                category TEXT,
-                amount REAL,
-                currency TEXT,
-                date TEXT,
-                FOREIGN KEY (account_id) REFERENCES accounts (id)
-            )
-        """)
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS goals (
-                id INTEGER PRIMARY KEY,
-                account_id INTEGER,
-                category TEXT,
-                amount REAL,
-                currency TEXT,
-                date TEXT,
-                FOREIGN KEY (account_id) REFERENCES accounts (id)
-            )
-        """)
-
-        cursor.execute("INSERT INTO accounts (name) VALUES (?)", (account_name,))
-        conn.commit()
-
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS accounts (
+            id INTEGER PRIMARY KEY, name TEXT UNIQUE
+        )
+    """)
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS income (
+            id INTEGER PRIMARY KEY, account_id INTEGER, category TEXT, amount REAL,
+            currency TEXT, date TEXT, FOREIGN KEY (account_id) REFERENCES accounts (id)
+        )
+    """)
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS expenses (
+            id INTEGER PRIMARY KEY, account_id INTEGER, category TEXT, amount REAL,
+            currency TEXT, date TEXT, FOREIGN KEY (account_id) REFERENCES accounts (id)
+        )
+    """)
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS goals (
+            id INTEGER PRIMARY KEY, account_id INTEGER, category TEXT, amount REAL,
+            currency TEXT, date TEXT, FOREIGN KEY (account_id) REFERENCES accounts (id)
+        )
+    """)
+    cursor.execute("INSERT OR IGNORE INTO accounts (name) VALUES (?)", (account_name,))
+    conn.commit()
     return conn
 
 # Helper function for error notifications
@@ -261,46 +238,57 @@ class BudgetTrackerApp(ctk.CTk):
             widget.grid_forget()
         frame.grid(row=0, column=0, sticky="nsew")
 
-    def add_income(self):
-        account = self.income_account_entry.get()
-        category = self.income_category_entry.get()
-        amount = self.income_amount_entry.get()
-        
-        # Add income to database
-        conn = create_or_open_database(account)
+    def add_transaction(self, account_name, category, amount, transaction_type):
+        if not account_name or not category or amount <= 0:
+            show_error("Please provide valid inputs for account name, category, and amount.")
+            return
+
+        conn = create_or_open_database(account_name)
         cursor = conn.cursor()
-        cursor.execute("INSERT INTO income (account_id, category, amount, currency, date) VALUES ((SELECT id FROM accounts WHERE name = ?), ?, ?, 'USD', ?)",
-                       (account, category, amount, time.strftime("%Y-%m-%d %H:%M:%S")))
+        timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
+        
+        cursor.execute("SELECT id FROM accounts WHERE name = ?", (account_name,))
+        account_id = cursor.fetchone()
+
+        if not account_id:
+            cursor.execute("INSERT INTO accounts (name) VALUES (?)", (account_name,))
+            conn.commit()
+            cursor.execute("SELECT id FROM accounts WHERE name = ?", (account_name,))
+            account_id = cursor.fetchone()
+
+        account_id = account_id[0]
+        cursor.execute(
+            f"INSERT INTO {transaction_type} (account_id, category, amount, currency, date) "
+            "VALUES (?, ?, ?, ?, ?)",
+            (account_id, category, amount, "USD", timestamp),
+        )
         conn.commit()
         conn.close()
 
-        # Clear input fields
+    def add_income(self):
+        self.add_transaction(
+            self.income_account_entry.get(),
+            self.income_category_entry.get(),
+            float(self.income_amount_entry.get() or 0),
+            "income"
+        )
+        # Clear input fields and show confirmation message
         self.income_account_entry.delete(0, 'end')
         self.income_category_entry.delete(0, 'end')
         self.income_amount_entry.delete(0, 'end')
-
-        # Show confirmation message
         ctk.CTkMessagebox(title="Success", message="Income added successfully!")
 
     def add_expense(self):
-        account = self.expense_account_entry.get()
-        category = self.expense_category_entry.get()
-        amount = self.expense_amount_entry.get()
-        
-        # Add expense to database
-        conn = create_or_open_database(account)
-        cursor = conn.cursor()
-        cursor.execute("INSERT INTO expenses (account_id, category, amount, currency, date) VALUES ((SELECT id FROM accounts WHERE name = ?), ?, ?, 'USD', ?)",
-                       (account, category, amount, time.strftime("%Y-%m-%d %H:%M:%S")))
-        conn.commit()
-        conn.close()
-
-        # Clear input fields
+        self.add_transaction(
+            self.expense_account_entry.get(),
+            self.expense_category_entry.get(),
+            float(self.expense_amount_entry.get() or 0),
+            "expenses"
+        )
+        # Clear input fields and show confirmation message
         self.expense_account_entry.delete(0, 'end')
         self.expense_category_entry.delete(0, 'end')
         self.expense_amount_entry.delete(0, 'end')
-
-        # Show confirmation message
         ctk.CTkMessagebox(title="Success", message="Expense added successfully!")
 
     def generate_chart(self):
@@ -452,4 +440,11 @@ class BudgetTrackerApp(ctk.CTk):
 
 if __name__ == "__main__":
     app = BudgetTrackerApp()
+    
+    # Loading user data and initializing app with accounts
+    user_data = load_to_json()
+    if user_data:
+        for account in user_data.get("accounts", []):
+            create_or_open_database(account)
+    
     app.mainloop()
