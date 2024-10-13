@@ -46,12 +46,12 @@ We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.
 ---
 ## To-Do List
 ### Core Functionalities
-1. [x] **Fix the Visuals**: Improve the UI/UX, adjust layout, and ensure the design is clean and user-friendly.
+1. [ ] **Fix the Visuals**: Improve the UI/UX, adjust layout, and ensure the design is clean and user-friendly.
 2. [ ] **Fix Visualization Tab**: Ensure that charts (bar, line, pie) display properly without overlapping or layout issues.
 3. [ ] **Work on Lendings Tab**: Add a feature where users can track money lent to others, with options to set deadlines and reminders.
 4. [ ] **Work on Borrowing Tab**: Implement a tab to track loans or borrowed amounts, including deadlines and reminders.
 5. [ ] **Make Data Permanent**: Enhance the database functionality to ensure persistent data storage, so users can retrieve past transactions after restarting the app.
-6. [ ] **Replace Tkinter with CustomTkinter**: Enhance the look and feel of the app by integrating `CustomTkinter` for modern, polished widgets.
+6. [x] **Replace Tkinter with CustomTkinter**: Enhance the look and feel of the app by integrating `CustomTkinter` for modern, polished widgets.
 
 ### Enhancements
 7. [ ] **User Authentication**: Add basic login functionality to allow different users to manage their accounts separately.
