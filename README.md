@@ -27,7 +27,7 @@ This project is a part of Hacktoberfest, and we're welcoming contributions! Whet
 ### Installation
 1. Clone the repository:
    ```bash
-   git clone https://github.com/your-repo/budget-tracker.git
+   git clone https://github.com/budget-tracker.git
    ```
 2. Create virtual environment
    ```bash
