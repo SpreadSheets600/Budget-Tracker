@@ -35,7 +35,7 @@ This project is a part of Hacktoberfest, and we're welcoming contributions! Whet
          or
    peotry init
    ```
-3. Activate Virtual Environment
+3. Activate virtual environment
    ```bash
    source env/bin/activate
          or
