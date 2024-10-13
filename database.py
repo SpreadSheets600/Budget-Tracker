@@ -14,3 +14,25 @@ class DatabaseManager:
             cursor = self.connection.cursor()
             cursor.execute(statement, value or [])
             return cursor
+
+    def create_table(self, table_name) -> None:
+        self._execute(
+            f"""
+        CREATE TABLE IF NOT EXISTS {table_name} (
+            id INTEGER PRIMARY KEY,
+            account_name TEXT,
+            category TEXT,
+            amount REAL,
+            date TEXT
+        )
+    """
+        )
+
+    def insert_data(self, table_name, data) -> None:
+
+        self._execute(
+            f"""
+                INSERT INTO {table_name} (account_name, category,amount, date) VALUES (?, ?, ?,?)
+            """,
+            tuple(data.values()),
+        )

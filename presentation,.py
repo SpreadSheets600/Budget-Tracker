@@ -2,6 +2,11 @@ import customtkinter as ctk
 import tkinter as tk
 from ttkbootstrap import Style
 
+from database import DatabaseManager
+
+
+db = DatabaseManager("Text2.db")
+
 
 class BudgetTracker(ctk.CTk):
     def __init__(self) -> None:
@@ -29,13 +34,6 @@ class BudgetTracker(ctk.CTk):
             "Budget Analysis": AnalysisInputForm,
         }
 
-        # for tab_name in tabs_name:
-        #     self.tabs.add(tab_name)
-        #     # tabs.tab(tab_name)
-
-        # for i, tab_name in enumerate(tabs_name[:3]):
-        #     InputForm(self.tabs.tab(tab_name))
-
         for tab_name, form_class in tabs_dict_items.items():
             self.tabs.add(tab_name)
             form_class(self.tabs.tab(tab_name), tab_name)
@@ -50,6 +48,8 @@ class TabsCreate(ctk.CTkTabview):
 class InputForm(ctk.CTkFrame):
     def __init__(self, parent, button_label=None) -> None:
         super().__init__(parent)
+        self.entries = {}
+        self.button_label = button_label
 
         labels = ["Account Name:", "Category:", "Amount:", "Date (YYYY-MM-DD):"]
         for label_text in labels:
@@ -58,10 +58,15 @@ class InputForm(ctk.CTkFrame):
 
             entry = ctk.CTkEntry(self)
             entry.pack(pady=5)
+            self.entries[label_text] = entry
 
-        button = ctk.CTkButton(self, text=f"Add {button_label}")
+        button = ctk.CTkButton(self, text=f"Add {button_label}", command=self.submit)
         button.pack(pady=5)
         self.pack(padx=10, pady=10, fill=ctk.BOTH, expand=True)
+
+    def submit(self) -> None:
+        db.create_table(self.button_label)
+        db.insert_data(self.button_label, self.entries)
 
 
 class VisualizationInputForm(ctk.CTkFrame):
