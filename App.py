@@ -1,13 +1,16 @@
 import customtkinter as ctk
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, messagebox
 import sqlite3
 import time
 import os
-import matplotlib.pyplot as plt
 import json
+import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from ttkbootstrap import Style
 
+# Set up appearance and style
+style = Style(theme="darkly")
 ctk.set_appearance_mode("Dark")
 ctk.set_default_color_theme("blue")
 
@@ -73,6 +76,10 @@ def create_or_open_database(account_name):
         conn.commit()
 
     return conn
+
+# Helper function for error notifications
+def show_error(message):
+    messagebox.showerror("Error", message)
 
 class BudgetTrackerApp(ctk.CTk):
     def __init__(self):
@@ -350,12 +357,98 @@ class BudgetTrackerApp(ctk.CTk):
         canvas.draw()
 
     def update_summary(self):
-        # Implement summary update logic here
-        ctk.CTkMessagebox(title="Info", message="Summary update not implemented yet.")
+        account = self.summary_account_entry.get()
+        if not account:
+            show_error("Please enter an account name.")
+            return
+
+        conn = create_or_open_database(account)
+        cursor = conn.cursor()
+
+        # Fetch income data
+        cursor.execute("SELECT SUM(amount) FROM income WHERE account_id = (SELECT id FROM accounts WHERE name = ?)", (account,))
+        total_income = cursor.fetchone()[0] or 0
+
+        # Fetch expense data
+        cursor.execute("SELECT SUM(amount) FROM expenses WHERE account_id = (SELECT id FROM accounts WHERE name = ?)", (account,))
+        total_expenses = cursor.fetchone()[0] or 0
+
+        # Fetch top 5 income categories
+        cursor.execute("SELECT category, SUM(amount) FROM income WHERE account_id = (SELECT id FROM accounts WHERE name = ?) GROUP BY category ORDER BY SUM(amount) DESC LIMIT 5", (account,))
+        top_income_categories = cursor.fetchall()
+
+        # Fetch top 5 expense categories
+        cursor.execute("SELECT category, SUM(amount) FROM expenses WHERE account_id = (SELECT id FROM accounts WHERE name = ?) GROUP BY category ORDER BY SUM(amount) DESC LIMIT 5", (account,))
+        top_expense_categories = cursor.fetchall()
+
+        conn.close()
+
+        # Clear previous summary
+        self.summary_text.delete("1.0", ctk.END)
+
+        # Update summary text
+        summary = f"Summary for Account: {account}\n\n"
+        summary += f"Total Income: ${total_income:.2f}\n"
+        summary += f"Total Expenses: ${total_expenses:.2f}\n"
+        summary += f"Net Balance: ${total_income - total_expenses:.2f}\n\n"
+
+        summary += "Top 5 Income Categories:\n"
+        for category, amount in top_income_categories:
+            summary += f"  {category}: ${amount:.2f}\n"
+
+        summary += "\nTop 5 Expense Categories:\n"
+        for category, amount in top_expense_categories:
+            summary += f"  {category}: ${amount:.2f}\n"
+
+        self.summary_text.insert(ctk.END, summary)
 
     def perform_analysis(self):
-        # Implement budget analysis logic here
-        ctk.CTkMessagebox(title="Info", message="Budget analysis not implemented yet.")
+        account = self.analysis_account_entry.get()
+        if not account:
+            show_error("Please enter an account name.")
+            return
+
+        conn = create_or_open_database(account)
+        cursor = conn.cursor()
+
+        # Fetch total income and expenses
+        cursor.execute("SELECT SUM(amount) FROM income WHERE account_id = (SELECT id FROM accounts WHERE name = ?)", (account,))
+        total_income = cursor.fetchone()[0] or 0
+
+        cursor.execute("SELECT SUM(amount) FROM expenses WHERE account_id = (SELECT id FROM accounts WHERE name = ?)", (account,))
+        total_expenses = cursor.fetchone()[0] or 0
+
+        # Calculate savings rate
+        savings_rate = ((total_income - total_expenses) / total_income) * 100 if total_income > 0 else 0
+
+        # Fetch top expense categories
+        cursor.execute("SELECT category, SUM(amount) FROM expenses WHERE account_id = (SELECT id FROM accounts WHERE name = ?) GROUP BY category ORDER BY SUM(amount) DESC LIMIT 3", (account,))
+        top_expenses = cursor.fetchall()
+
+        conn.close()
+
+        # Prepare analysis text
+        analysis = f"Budget Analysis for Account: {account}\n\n"
+        analysis += f"Total Income: ${total_income:.2f}\n"
+        analysis += f"Total Expenses: ${total_expenses:.2f}\n"
+        analysis += f"Net Savings: ${total_income - total_expenses:.2f}\n"
+        analysis += f"Savings Rate: {savings_rate:.2f}%\n\n"
+
+        analysis += "Top 3 Expense Categories:\n"
+        for category, amount in top_expenses:
+            percentage = (amount / total_expenses) * 100 if total_expenses > 0 else 0
+            analysis += f"  {category}: ${amount:.2f} ({percentage:.2f}% of total expenses)\n"
+
+        # Provide some basic advice
+        if savings_rate < 20:
+            analysis += "\nAdvice: Consider reducing expenses to increase your savings rate."
+        elif savings_rate >= 20 and savings_rate < 50:
+            analysis += "\nAdvice: You're doing well! Consider setting specific savings goals."
+        else:
+            analysis += "\nAdvice: Excellent savings rate! Make sure you're investing wisely."
+
+        # Update the analysis text
+        self.analysis_text.configure(text=analysis)
 
 if __name__ == "__main__":
     app = BudgetTrackerApp()
