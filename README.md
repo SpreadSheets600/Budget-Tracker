@@ -50,7 +50,7 @@ This project is a part of Hacktoberfest, and we're welcoming contributions! Whet
    ```
 5. Run the application:
    ```bash
-   python App.py
+   python src/Main.py
    ```
 
 ---
