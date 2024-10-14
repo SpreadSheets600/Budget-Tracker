@@ -62,18 +62,18 @@ We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.
 ## To-Do List
 ### Core Functionalities
 1. [ ] **Fix the Visuals**: Improve the UI/UX, adjust layout, and ensure the design is clean and user-friendly.
-2. [ ] **Fix Visualization Tab**: Ensure that charts (bar, line, pie) display properly without overlapping or layout issues.
+2. [X] **Fix Visualization Tab**: Ensure that charts (bar, line, pie) display properly without overlapping or layout issues.
 3. [ ] **Work on Lendings Tab**: Add a feature where users can track money lent to others, with options to set deadlines and reminders.
 4. [ ] **Work on Borrowing Tab**: Implement a tab to track loans or borrowed amounts, including deadlines and reminders.
-5. [ ] **Make Data Permanent**: Enhance the database functionality to ensure persistent data storage, so users can retrieve past transactions after restarting the app.
-6. [x] **Replace Tkinter with CustomTkinter**: Enhance the look and feel of the app by integrating `CustomTkinter` for modern, polished widgets.
+5. [X] **Make Data Permanent**: Enhance the database functionality to ensure persistent data storage, so users can retrieve past transactions after restarting the app.
+6. [X] **Replace Tkinter with CustomTkinter**: Enhance the look and feel of the app by integrating `CustomTkinter` for modern, polished widgets.
 
 ### Enhancements
-7. [ ] **User Authentication**: Add basic login functionality to allow different users to manage their accounts separately.
+7. [X] **User Authentication**: Add basic login functionality to allow different users to manage their accounts separately.
 8. [ ] **Currency Conversion**: Implement a feature to convert between currencies, pulling exchange rates from an API.
 9. [ ] **Recurring Transactions**: Enable users to set recurring transactions (monthly bills, salary, etc.) that auto-log at set intervals.
 10. [ ] **Export Data**: Allow users to export their data (income, expenses, goals) to CSV or Excel format for easier analysis.
-11. [ ] **Add Notifications**: Implement a system to notify users when they exceed budget limits or reach savings goals.
+11. [X] **Add Notifications**: Implement a system to notify users when they exceed budget limits or reach savings goals.
 12. [ ] **Mobile App Version**: Plan and develop a mobile version (possibly using Kivy or other frameworks).
 
 ---
