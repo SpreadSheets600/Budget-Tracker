@@ -1,4 +1,0 @@
-python>=3.8
-customtkinter==5.2.2
-matplotlib==3.9.2
-ttkbootstrap==1.10.1
