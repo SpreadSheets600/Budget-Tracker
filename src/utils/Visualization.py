@@ -13,13 +13,26 @@ def plot_bar_chart(data: list, labels: list, title: str, parent) -> None:
     try:
         fig, ax = plt.subplots(figsize=(10, 5))
         ax.bar(labels, data)
-        ax.set_title(title)
-        ax.set_xlabel("Category")
-        ax.set_ylabel("Amount (USD)")
-        plt.xticks(rotation=45, ha="right")
+        
+        # Setting the chart title with custom styling
+        ax.set_title(title, fontsize=16, color='white', pad=20, loc='center')
+        
+        # Setting labels and title for the axes
+        ax.set_xlabel("Category", fontsize=12, color='lightgray')
+        ax.set_ylabel("Amount (USD)", fontsize=12, color='lightgray')
+        
+        # Styling x-axis labels
+        plt.xticks(rotation=45, ha="right", fontsize=10, color='lightgray')
+        plt.yticks(fontsize=10, color='lightgray')
+        
+        # Customizeing chart background and grid
+        ax.set_facecolor("#000000")  
+        fig.patch.set_facecolor("#1E90FF")  
+        
         plt.tight_layout()
 
         display_chart(fig, parent)
+
     except Exception as e:
         logging.error(f"Error plotting bar chart: {e}")
 
@@ -28,8 +41,17 @@ def plot_pie_chart(data: list, labels: list, title: str, parent) -> None:
     """Plots a pie chart."""
     try:
         fig, ax = plt.subplots(figsize=(8, 8))
-        ax.pie(data, labels=labels, autopct="%1.1f%%", startangle=90)
-        ax.set_title(title)
+        
+        # Pie chart with custom colors and percentages
+        ax.pie(data, labels=labels, autopct="%1.1f%%", startangle=90, textprops={'color': 'white'})
+        
+        # Set title with custom styling
+        ax.set_title(title, fontsize=16, color='white', pad=20, loc='center')
+
+        # Set background colors
+        ax.set_facecolor("#000000")  
+        fig.patch.set_facecolor("#1E90FF")  
+
         plt.tight_layout()
 
         display_chart(fig, parent)
@@ -47,26 +69,35 @@ def plot_line_chart(income_data: list, expense_data: list, parent) -> None:
             income_dates = [
                 datetime.strptime(date, "%Y-%m-%d").date() for date in income_dates
             ]
-            ax.plot(income_dates, income_amounts, label="Income", marker="o")
+            ax.plot(income_dates, income_amounts, label="Income", marker="o", color='#66b3ff')
 
         if expense_data:
             expense_dates, expense_amounts = zip(*expense_data)
             expense_dates = [
                 datetime.strptime(date, "%Y-%m-%d").date() for date in expense_dates
             ]
-            ax.plot(expense_dates, expense_amounts, label="Expenses", marker="o")
+            ax.plot(expense_dates, expense_amounts, label="Expenses", marker="o", color='#ff9999')
 
-        ax.set_title("Income and Expenses Over Time")
-        ax.set_xlabel("Date")
-        ax.set_ylabel("Amount (USD)")
+        
+        ax.set_title("Income and Expenses Over Time", fontsize=16, color='white', pad=20, loc='center')
+        
+        # Set labels and grid
+        ax.set_xlabel("Date", fontsize=12, color='lightgray')
+        ax.set_ylabel("Amount (USD)", fontsize=12, color='lightgray')
         ax.legend()
-        plt.gcf().autofmt_xdate()  # Rotate and align the tick labels
+
+        
+        plt.xticks(color='lightgray')
+        plt.yticks(color='lightgray')
+        ax.set_facecolor("#000000")  
+        fig.patch.set_facecolor("#1E90FF")  
+
+        plt.gcf().autofmt_xdate()  
         plt.tight_layout()
 
         display_chart(fig, parent)
     except Exception as e:
         logging.error(f"Error plotting line chart: {e}")
-
 
 def plot_stacked_bar_chart(income_data: list, expense_data: list, parent) -> None:
     """Plots a stacked bar chart comparing income and expenses by category."""
@@ -82,17 +113,24 @@ def plot_stacked_bar_chart(income_data: list, expense_data: list, parent) -> Non
         ax.bar(x - width / 2, income_amounts, width, label="Income", color="#66b3ff")
         ax.bar(x + width / 2, expense_amounts, width, label="Expenses", color="#ff9999")
 
-        ax.set_title("Income vs Expenses by Category")
-        ax.set_xlabel("Category")
-        ax.set_ylabel("Amount (USD)")
+        ax.set_title("Income vs Expenses by Category", fontsize=16, color='white', pad=20, loc='center')
+        
+    
+        ax.set_xlabel("Category", fontsize=12, color='lightgray')
+        ax.set_ylabel("Amount (USD)", fontsize=12, color='lightgray')
         ax.set_xticks(x)
-        ax.set_xticklabels(income_categories, rotation=45, ha="right")
+        ax.set_xticklabels(income_categories, rotation=45, ha="right", fontsize=10, color='lightgray')
+
+        
         ax.legend()
+        ax.set_facecolor("#000000")  
+        fig.patch.set_facecolor("#1E90FF")  
 
         plt.tight_layout()
         display_chart(fig, parent)
     except Exception as e:
         logging.error(f"Error plotting stacked bar chart: {e}")
+
 
 
 def display_chart(fig, parent) -> None:
