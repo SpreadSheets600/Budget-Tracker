@@ -177,8 +177,25 @@ class BudgetTrackerApp:
             lambda: self.show_line_chart(viz_account_entry.get()),
         )
 
-        self.chart_frame = ctk.CTkFrame(page)
-        self.chart_frame.pack(fill=ctk.BOTH, expand=True, pady=10)
+        # Main chart frame
+        self.chart_frame = ctk.CTkFrame(
+            page, 
+            fg_color="#000000",      
+            corner_radius=15,        
+            border_color="#1E90FF",  
+            border_width=3           
+        )
+        self.chart_frame.pack(fill=ctk.BOTH, expand=True, padx=20, pady=20)
+
+        # Chart display area directly inside the chart frame 
+        ctk.CTkFrame(
+            self.chart_frame, 
+            fg_color="#1E90FF",      
+            corner_radius=15,        
+            border_color="#FFFFFF",  
+            border_width=2           
+        ).pack(fill=ctk.BOTH, expand=True, padx=10, pady=10)
+
 
     def setup_summary_page(self):
         page = self.pages["Summary"]
