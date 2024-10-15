@@ -9,8 +9,8 @@ def create_tables(conn) -> None:
         """
         CREATE TABLE IF NOT EXISTS accounts (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT UNIQUE,
-            password TEXT
+            username TEXT UNIQUE NOT NULL,
+            password TEXT NOT NULL
         )
         """
     )
@@ -31,31 +31,47 @@ def create_tables(conn) -> None:
     conn.commit()
 
 
-def create_user_account(conn, username: str, password: str) -> None:
-    """Create a new user account."""
-    cursor = conn.cursor()
-    hashed_password = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())
+def create_user_account(self, conn: sqlite3.Connection, username: str, password: str) -> None:
+        """Create a new user account."""
+        hashed_password = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())
+        
+        try:
+            with conn:
+                cursor = conn.cursor()
+                cursor.execute(
+                    "INSERT INTO accounts (username, password) VALUES (?, ?)",
+                    (username, hashed_password)
+                )
+            print("User account created successfully.")
+        except sqlite3.IntegrityError:
+            raise ValueError("Username already exists. Please choose a different username.")
+        except sqlite3.Error as e:
+            raise RuntimeError(f"Database error: {e}")
+
+
+
+def validate_user(conn: sqlite3.Connection, username: str, password: str) -> bool:
+    """Validate user credentials against the stored hashed password."""
+    if conn is None:
+        raise ValueError("Database connection is not valid.")
+
     try:
-        cursor.execute(
-            "INSERT INTO accounts (username, password) VALUES (?, ?)",
-            (username, hashed_password),
-        )
-        conn.commit()
-        print("User account created successfully.")
-    except sqlite3.IntegrityError:
-        raise ValueError("Username already exists. Please choose a different username.")
+        # Use a context manager for the cursor
+        with conn.cursor() as cursor:
+            # Execute the query to fetch the hashed password
+            cursor.execute("SELECT password FROM accounts WHERE username = ?", (username,))
+            result = cursor.fetchone()
+            
+            # Check if user exists and if the password matches
+            if result and bcrypt.checkpw(password.encode("utf-8"), result[0].encode("utf-8")):
+                return True
+
     except sqlite3.Error as e:
-        raise RuntimeError(f"Database error: {e}")
+        # Handle database errors (logging can be added here)
+        print(f"Database error occurred: {e}")
 
-
-def validate_user(conn, username: str, password: str) -> bool:
-    """Validate user credentials."""
-    cursor = conn.cursor()
-    cursor.execute("SELECT password FROM accounts WHERE username = ?", (username,))
-    result = cursor.fetchone()
-    if result and bcrypt.checkpw(password.encode("utf-8"), result[0]):
-        return True
     return False
+
 
 
 def get_account_id(conn, username: str) -> int:
