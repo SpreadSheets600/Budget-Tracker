@@ -1,4 +1,4 @@
 customtkinter==5.2.2
 matplotlib==3.9.2
 numpy==2.1.2
-python_bcrypt==0.3.2
+bcrypt
