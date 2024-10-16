@@ -40,7 +40,7 @@ def create_user_account(self, conn: sqlite3.Connection, username: str, password:
                 cursor = conn.cursor()
                 cursor.execute(
                     "INSERT INTO accounts (username, password) VALUES (?, ?)",
-                    (username, hashed_password)
+                    (username, hashed_password),
                 )
             print("User account created successfully.")
         except sqlite3.IntegrityError:
@@ -56,15 +56,21 @@ def validate_user(conn: sqlite3.Connection, username: str, password: str) -> boo
         raise ValueError("Database connection is not valid.")
 
     try:
-        # Use a context manager for the cursor
-        with conn.cursor() as cursor:
-            # Execute the query to fetch the hashed password
-            cursor.execute("SELECT password FROM accounts WHERE username = ?", (username,))
-            result = cursor.fetchone()
-            
-            # Check if user exists and if the password matches
-            if result and bcrypt.checkpw(password.encode("utf-8"), result[0].encode("utf-8")):
-                return True
+        # Create a cursor without a context manager
+        cursor = conn.cursor()
+        
+        # Execute the query to fetch the hashed password for the given username
+        cursor.execute("SELECT password FROM accounts WHERE username = ?", (username,))
+        result = cursor.fetchone()
+        
+        # Close the cursor explicitly
+        cursor.close()
+        
+        # Check if user exists and if the password matches the hashed password
+        if result and bcrypt.checkpw(password.encode("utf-8"), result[0]):
+            return True
+        else:
+            return False
 
     except sqlite3.Error as e:
         # Handle database errors (logging can be added here)

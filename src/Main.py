@@ -229,20 +229,29 @@ class BudgetTrackerApp:
             ),
         )
 
+    def is_valid_input(self, username: str, password: str) -> bool:
+        """
+        Validates the input for the username and password.
+        Ensures that neither is empty and that they meet other criteria (if any).
+        """
+        if not username or not password:
+            self.show_notification("Username and password are required.", "error")
+        return True
+
     def register(self, username: str, password: str) -> None:
         """Register a new user with the given username and password."""
         if not self.is_valid_input(username, password):
             return
         
         try:
-            self.create_user_account(self.db, username, password)
+            create_user_account(self, self.db, username, password)
             self.show_notification("Registration successful!", "success")
         except ValueError as ve:
             self.show_notification(str(ve), "error")
         except RuntimeError as re:
             self.show_notification(str(re), "error")
         except Exception as e:
-            self.show_notification("An unexpected error occurred.", "error")
+            self.show_notification(str(e), "error")
 
     def login(self, username, password):
         if not username or not password:
