@@ -229,15 +229,20 @@ class BudgetTrackerApp:
             ),
         )
 
-    def register(self, username, password):
-        if not username or not password:
-            self.show_notification("Username and password are required.", "error")
+    def register(self, username: str, password: str) -> None:
+        """Register a new user with the given username and password."""
+        if not self.is_valid_input(username, password):
             return
+        
         try:
-            create_user_account(self.db, username, password)
+            self.create_user_account(self.db, username, password)
             self.show_notification("Registration successful!", "success")
+        except ValueError as ve:
+            self.show_notification(str(ve), "error")
+        except RuntimeError as re:
+            self.show_notification(str(re), "error")
         except Exception as e:
-            self.show_notification(str(e), "error")
+            self.show_notification("An unexpected error occurred.", "error")
 
     def login(self, username, password):
         if not username or not password:
@@ -441,18 +446,16 @@ class BudgetTrackerApp:
         labels = [row[0] for row in results]
         return data, labels
 
-    def show_notification(self, message, message_type):
-        if message_type == "error":
-            color = "red"
-        elif message_type == "success":
-            color = "green"
-        else:
-            color = "white"
+    def show_notification(self, message: str, message_type: str) -> None:
+        """Display a notification with the specified message and type."""
+        color = {
+            "error": "red",
+            "success": "green"
+        }.get(message_type, "white")
 
         self.notification_label.configure(text=message, text_color=color)
-        self.notification_label.after(
-            5000, lambda: self.notification_label.configure(text="")
-        )
+        self.notification_label.after(5000, lambda: self.notification_label.configure(text=""))
+
 
     def run(self):
         self.root.mainloop()
