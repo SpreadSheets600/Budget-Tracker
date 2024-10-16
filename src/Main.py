@@ -481,24 +481,34 @@ class BudgetTrackerApp:
         self.notification_label.pack(expand=True, fill="both", padx=10, pady=10)
         self.notification_label.configure(text=message, text_color=color)
 
+        size, root_x, root_y = self.root.geometry().split('+')
+        root_x = int(root_x)
+        root_y = int(root_y)
+
+        root_w, root_h = size.split('x')
+        root_w = int(root_w)
+        root_h = int(root_h)
+
         # Update the popup size based on the label text
         popup.update_idletasks()  # Update "requested size" from geometry manager
         popup_width = self.notification_label.winfo_width() + 20  # Adding padding
         popup_height = self.notification_label.winfo_height() + 20  # Adding padding
         popup.minsize(250, 50)  # Set minimum size for the pop-up
-        popup.geometry(f"{popup_width}x{popup_height}+{self.root.winfo_width() - popup_width - 50}+{self.root.winfo_height() - popup_height - 50}")
 
+        popup_y = root_y + (root_h - popup_height - popup_height // 2) # Almost bottom
+        popup_x = root_x + (root_w - (popup_width + 20 if popup_width >= 250 else 270)) # FIXME: why isn't popup_width the exact width?
+
+        popup.geometry(f"{popup_width}x{popup_height}+{popup_x}+{popup_y}")
 
         # Automatically destroy the pop-up after a certain duration
         popup.after(3000, popup.destroy)  # Automatically close after 3 seconds
 
         # Bind the resize event of the main window to update the position
         def update_popup_position(event):
-            popup.geometry(f"{popup_width}x{popup_height}+{self.root.winfo_width() - popup_width - 50}+{self.root.winfo_height() - popup_height - 50}")
+            popup.geometry(f"{popup_width}x{popup_height}+{popup_x}+{popup_y}")
 
         # Update position when the main window is resized
         self.root.bind("<Configure>", update_popup_position)
-
 
     def run(self):
         self.root.mainloop()
