@@ -90,23 +90,37 @@ def get_account_id(conn, username: str) -> int:
     raise ValueError("Account not found.")
 
 
-def fetch_data(conn, account_id: int) -> list:
+def fetch_data(conn, account_id: int) -> list:                  #Added Error Handling
     """Fetch transactions for a given account ID."""
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM transactions WHERE account_id = ?", (account_id,))
-    return cursor.fetchall()
+    if conn is None:
+        raise ValueError("Database connection is not valid")
+    try:   
+        with conn:     
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM transactions WHERE account_id = ?", (account_id,))
+            return cursor.fetchall()
+    except sqlite3.Error as e:
+        print(f"Database error occurred while fetching data: {e}")
+        return []
 
 
-def fetch_total(conn, account_id: int) -> float:
+def fetch_total(conn: sqlite3.Connection, account_id: int) -> float:     #Added Error Handling
     """Fetch total balance for a given account ID."""
-    cursor = conn.cursor()
-    cursor.execute(
-        "SELECT SUM(amount) FROM transactions WHERE account_id = ?", (account_id,)
-    )
-    result = cursor.fetchone()
-    if result:
-        return result[0]
-    return 0.0
+    if conn is None:
+        raise ValueError("Database connection is not valid.")
+    
+    try:
+        with conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT SUM(amount) FROM transactions WHERE account_id = ?", (account_id,))
+            result = cursor.fetchone()
+            if result and result[0] is not None:
+                return result[0]
+            return 0.0  
+    except sqlite3.Error as e:
+        print(f"Database error occurred while fetching total: {e}")
+        return 0.0 
+
 
 
 def create_or_open_database(db_name: str):
