@@ -111,3 +111,18 @@ def create_scrollable_frame(parent: tk.Widget) -> ctk.CTkFrame:
     except Exception as e:
         print(f"Error creating scrollable frame: {e}")
         return None
+
+def create_dropdown(parent: tk.Widget, options: list, command: Optional[Callable] = None) -> ctk.CTkOptionMenu:
+    """Creates a dropdown (option menu) widget.
+
+    Args:
+        parent (tk.Widget): The parent widget.
+        options (list): The list of options to display in the dropdown.
+        command (Optional[Callable]): The function to be called when an option is selected.
+
+    Returns:
+        ctk.CTkOptionMenu: The created dropdown widget.
+    """
+    dropdown = ctk.CTkOptionMenu(parent, values=options, command=command)
+    dropdown.pack(pady=10)
+    return dropdown

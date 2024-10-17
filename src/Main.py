@@ -1,4 +1,5 @@
 import sqlite3
+import requests
 import tkinter as tk
 import customtkinter as ctk
 from utils.Components import (
@@ -6,6 +7,7 @@ from utils.Components import (
     create_button,
     create_textbox,
     update_textbox,
+    create_dropdown,
 )
 from utils.Database import (
     create_or_open_database,
@@ -196,7 +198,7 @@ class BudgetTrackerApp:
             border_width=2           
         ).pack(fill=ctk.BOTH, expand=True, padx=10, pady=10)
 
-
+    # Summary Page 
     def setup_summary_page(self):
         page = self.pages["Summary"]
 
@@ -215,6 +217,7 @@ class BudgetTrackerApp:
             lambda: self.export_all_data(summary_account_entry.get()),
         )
 
+    # Budget Analysis Page
     def setup_budget_analysis_page(self):
         page = self.pages["Budget Analysis"]
 
@@ -312,6 +315,7 @@ class BudgetTrackerApp:
         except Exception as e:
             self.show_notification(f"Error displaying chart: {str(e)}", "error")
 
+    # Updated Summary
     def update_summary(self, account_name, summary_text):
         try:
             account_id = get_account_id(self.db, account_name)
@@ -337,7 +341,7 @@ class BudgetTrackerApp:
             )
         except Exception as e:
             self.show_notification(f"Error updating summary: {str(e)}", "error")
-
+    
     def budget_analysis(self, account_name, analysis_text):
         try:
             account_id = get_account_id(self.db, account_name)
