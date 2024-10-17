@@ -1,6 +1,6 @@
 import csv
 from datetime import datetime
-from utils.Database import get_account_id, fetch_data, fetch_total
+from src.utils.Database import get_account_id, fetch_data, fetch_total
 
 # Constants for CSV headers
 TRANSACTION_HEADERS = ["Category", "Amount", "Currency", "Date"]

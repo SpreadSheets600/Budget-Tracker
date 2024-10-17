@@ -1,6 +1,7 @@
 import sqlite3
-import tkinter as tk
+
 import customtkinter as ctk
+
 from utils.Components import (
     create_labeled_entry,
     create_button,
@@ -13,8 +14,8 @@ from utils.Database import (
     create_user_account,
     validate_user,
 )
-from utils.Visualization import plot_bar_chart, plot_pie_chart, plot_line_chart
 from utils.Export import export_to_csv
+from utils.Visualization import plot_bar_chart, plot_pie_chart, plot_line_chart
 
 
 class BudgetTrackerApp:
