@@ -17,6 +17,8 @@ from utils.Database import (
 from utils.Export import export_to_csv
 from utils.Visualization import plot_bar_chart, plot_pie_chart, plot_line_chart
 
+from sys import platform as sys_platform
+
 
 class BudgetTrackerApp:
     PAGES = [
@@ -33,7 +35,10 @@ class BudgetTrackerApp:
         self.root.title("Budget Tracker")
         self.root.geometry("1000x600")
 
-        self.root.iconbitmap("Icon.ico")
+        # Icon loading on Linux gives error. This fixes it for now.
+        if sys_platform == "win32" or sys_platform == "cygwin":
+            self.root.iconbitmap("Icon.ico")
+
         ctk.set_appearance_mode("dark")
         ctk.set_default_color_theme("dark-blue")
 
