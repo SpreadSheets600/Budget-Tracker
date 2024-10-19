@@ -1,6 +1,7 @@
 import tkinter as tk
 import customtkinter as ctk
 from typing import Callable, Optional
+from tkinter import ttk
 
 
 def create_labeled_entry(
@@ -111,3 +112,14 @@ def create_scrollable_frame(parent: tk.Widget) -> ctk.CTkFrame:
     except Exception as e:
         print(f"Error creating scrollable frame: {e}")
         return None
+
+# create Dropdown
+def create_dropdown(parent, options, default=None):
+    selected_var = tk.StringVar(value=default if default else options[0])
+    
+    # Create the dropdown
+    dropdown = ttk.Combobox(parent, textvariable=selected_var, values=options)
+    dropdown.set(default if default else options[0])
+    dropdown.pack(pady=10)
+
+    return selected_var
