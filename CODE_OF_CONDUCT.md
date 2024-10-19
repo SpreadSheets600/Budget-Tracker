@@ -12,6 +12,6 @@ Project maintainers are responsible for clarifying and enforcing our standards o
 
 ## Enforcement
 
-Instances of abusive, harassing, or otherwise unacceptable behavior may be reported by contacting the project team at <your-email>. All complaints will be reviewed and investigated promptly and fairly.
+Instances of abusive, harassing, or otherwise unacceptable behavior may be reported by contacting the project team at `sohammaity239@gmail.com`. All complaints will be reviewed and investigated promptly and fairly.
 
 This Code of Conduct is adapted from the [Contributor Covenant](https://www.contributor-covenant.org), version 2.0.
