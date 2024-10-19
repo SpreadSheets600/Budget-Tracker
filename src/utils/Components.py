@@ -1,4 +1,5 @@
 import tkinter as tk
+from tkinter import ttk
 import customtkinter as ctk
 from typing import Callable, Optional
 
@@ -111,18 +112,13 @@ def create_scrollable_frame(parent: tk.Widget) -> ctk.CTkFrame:
     except Exception as e:
         print(f"Error creating scrollable frame: {e}")
         return None
-
-def create_dropdown(parent: tk.Widget, options: list, command: Optional[Callable] = None) -> ctk.CTkOptionMenu:
-    """Creates a dropdown (option menu) widget.
-
-    Args:
-        parent (tk.Widget): The parent widget.
-        options (list): The list of options to display in the dropdown.
-        command (Optional[Callable]): The function to be called when an option is selected.
-
-    Returns:
-        ctk.CTkOptionMenu: The created dropdown widget.
-    """
-    dropdown = ctk.CTkOptionMenu(parent, values=options, command=command)
+    
+def create_dropdown(parent, options, default=None):
+    selected_var = tk.StringVar(value=default if default else options[0])
+    
+    # Create the dropdown
+    dropdown = ttk.Combobox(parent, textvariable=selected_var, values=options)
+    dropdown.set(default if default else options[0])
     dropdown.pack(pady=10)
-    return dropdown
+
+    return selected_var
