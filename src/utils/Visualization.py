@@ -1,167 +1,236 @@
-from datetime import datetime
-import matplotlib.pyplot as plt
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-import numpy as np
 import logging
+import time
+import numpy as np
+from datetime import datetime
+from typing import Tuple, Any
+import customtkinter as ctk
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
-# Set up logging
-logging.basicConfig(level=logging.ERROR)
 
+def create_figure() -> Tuple[Figure, Any]:
+    """Create a figure with DPI-aware sizing"""
+    fig = plt.figure(figsize=(12, 7), dpi=100)
+    ax = fig.add_subplot(111)
+    return fig, ax
+
+def setup_figure_style(fig: Figure, ax: Any, title: str) -> None:
+    background_color = "#000000"
+    text_color = "white"
+    grid_color = "gray"
+    
+    ax.set_facecolor(background_color)
+    fig.patch.set_facecolor("#000000")  # Changed to black background
+    
+    ax.set_title(title, 
+                 fontsize=18,
+                 color=text_color, 
+                 pad=15,
+                 loc='center',
+                 fontweight='bold')
+    
+    for spine in ax.spines.values():
+        spine.set_color(grid_color)
+        spine.set_linewidth(0.5)
+    
+    ax.grid(True, 
+            linestyle='--', 
+            alpha=0.2, 
+            color=grid_color,
+            which='both')
+    
+    ax.tick_params(colors=text_color, 
+                  which='both',
+                  length=5,
+                  width=0.5)
 
 def plot_bar_chart(data: list, labels: list, title: str, parent) -> None:
-    """Plots a bar chart using provided data and labels."""
     try:
-        fig, ax = plt.subplots(figsize=(10, 5))
-        ax.bar(labels, data)
+        fig, ax = create_figure()
         
-        # Setting the chart title with custom styling
-        ax.set_title(title, fontsize=16, color='white', pad=20, loc='center')
+        bars = ax.bar(labels, 
+                     data,
+                     color='#1E90FF',
+                     alpha=0.7,
+                     width=0.6)
+      
+        for bar in bars:
+            height = bar.get_height()
+            ax.text(bar.get_x() + bar.get_width()/2.,
+                   height + (max(data) * 0.02),
+                   f'${height:,.0f}',
+                   ha='center',
+                   va='bottom',
+                   color='white',
+                   fontsize=10,
+                   fontweight='bold')
         
-        # Setting labels and title for the axes
-        ax.set_xlabel("Category", fontsize=12, color='lightgray')
-        ax.set_ylabel("Amount (USD)", fontsize=12, color='lightgray')
+        ax.set_ylim(0, max(data) * 1.15)
         
-        # Styling x-axis labels
-        plt.xticks(rotation=45, ha="right", fontsize=10, color='lightgray')
-        plt.yticks(fontsize=10, color='lightgray')
+        ax.set_xlabel("Category", fontsize=14, color='white', labelpad=15)
+        ax.set_ylabel("Amount (USD)", fontsize=14, color='white', labelpad=15)
         
-        # Customizeing chart background and grid
-        ax.set_facecolor("#000000")  
-        fig.patch.set_facecolor("#1E90FF")  
+        plt.xticks(rotation=30, ha="right") 
         
-        plt.tight_layout()
-
+        setup_figure_style(fig, ax, title)
+        plt.tight_layout(pad=3)
+        
         display_chart(fig, parent)
-
+        
     except Exception as e:
         logging.error(f"Error plotting bar chart: {e}")
 
 
 def plot_pie_chart(data: list, labels: list, title: str, parent) -> None:
-    """Plots a pie chart."""
     try:
-        fig, ax = plt.subplots(figsize=(8, 8))
-        
-        # Pie chart with custom colors and percentages
-        ax.pie(data, labels=labels, autopct="%1.1f%%", startangle=90, textprops={'color': 'white'})
-        
-        # Set title with custom styling
-        ax.set_title(title, fontsize=16, color='white', pad=20, loc='center')
+        fig, ax = create_figure()
 
-        # Set background colors
-        ax.set_facecolor("#000000")  
-        fig.patch.set_facecolor("#1E90FF")  
+        # Color map with a number of distinct colors based on the data length
+        num_segments = len(data)
+        colors = plt.cm.tab20(np.linspace(0, 1, num_segments))
 
-        plt.tight_layout()
+        wedges, texts, autotexts = ax.pie(data,
+                                           labels=labels,
+                                           colors=colors,
+                                           autopct='%1.1f%%',
+                                           startangle=90,
+                                           pctdistance=0.75,
+                                           labeldistance=1.2)
+
+        plt.setp(autotexts, size=12, weight="bold", color="white")
+        plt.setp(texts, size=12, color="white")
+
+        # Dark center circle
+        centre_circle = plt.Circle((0, 0), 0.40, fc='#1a1a1a')
+        ax.add_artist(centre_circle)
+
+        total = sum(data)
+        ax.text(0, 0, f'Total\n${total:,.0f}',
+                ha='center',
+                va='center',
+                color='white',
+                fontsize=14,
+                fontweight='bold')
+
+        setup_figure_style(fig, ax, title)
+        plt.tight_layout(pad=3.5)
 
         display_chart(fig, parent)
+
     except Exception as e:
         logging.error(f"Error plotting pie chart: {e}")
 
 
-def plot_line_chart(income_data: list, expense_data: list, parent) -> None:
-    """Plots a line chart for income and expenses over time."""
+def plot_line_chart(income_data: tuple, expense_data: tuple, parent) -> None:
     try:
-        fig, ax = plt.subplots(figsize=(12, 6))
-
-        if income_data:
-            income_dates, income_amounts = zip(*income_data)
-            income_dates = [
-                datetime.strptime(date, "%Y-%m-%d").date() for date in income_dates
-            ]
-            ax.plot(income_dates, income_amounts, label="Income", marker="o", color='#66b3ff')
-
-        if expense_data:
-            expense_dates, expense_amounts = zip(*expense_data)
-            expense_dates = [
-                datetime.strptime(date, "%Y-%m-%d").date() for date in expense_dates
-            ]
-            ax.plot(expense_dates, expense_amounts, label="Expenses", marker="o", color='#ff9999')
-
+        fig, ax = create_figure()
         
-        ax.set_title("Income and Expenses Over Time", fontsize=16, color='white', pad=20, loc='center')
+        max_value = 0
         
-        # Set labels and grid
-        ax.set_xlabel("Date", fontsize=12, color='lightgray')
-        ax.set_ylabel("Amount (USD)", fontsize=12, color='lightgray')
-        ax.legend()
+        if income_data and len(income_data[0]) > 0:
+            dates = [datetime.strptime(date, "%d/%m/%Y").date() for date in income_data[0]]
+            ax.plot(dates, income_data[1],
+                   label="Income",
+                   color='#4ECB71',
+                   linewidth=2,
+                   marker='o',
+                   markersize=8,
+                   markerfacecolor='#4ECB71',
+                   markeredgecolor='white',
+                   markeredgewidth=2)
+            
+            for i, (x, y) in enumerate(zip(dates, income_data[1])):
+                offset = 20 if i % 2 == 0 else 35
+                ax.annotate(f'${y:,.0f}',
+                           (x, y),
+                           xytext=(0, offset),
+                           textcoords='offset points',
+                           ha='center',
+                           va='bottom',
+                           color='#4ECB71',
+                           fontsize=10,
+                           fontweight='bold')
+                max_value = max(max_value, y)
 
+        if expense_data and len(expense_data[0]) > 0:
+            dates = [datetime.strptime(date, "%d/%m/%Y").date() for date in expense_data[0]]
+            ax.plot(dates, expense_data[1],
+                   label="Expenses",
+                   color='#FF6B6B',
+                   linewidth=2,
+                   marker='o',
+                   markersize=8,
+                   markerfacecolor='#FF6B6B',
+                   markeredgecolor='white',
+                   markeredgewidth=2)
+            
+            for i, (x, y) in enumerate(zip(dates, expense_data[1])):
+                offset = -25 if i % 2 == 0 else -40
+                ax.annotate(f'${y:,.0f}',
+                           (x, y),
+                           xytext=(0, offset),
+                           textcoords='offset points',
+                           ha='center',
+                           va='top',
+                           color='#FF6B6B',
+                           fontsize=10,
+                           fontweight='bold')
+                max_value = max(max_value, y)
+
+        ax.set_ylim(0, max_value * 1.25)
         
-        plt.xticks(color='lightgray')
-        plt.yticks(color='lightgray')
-        ax.set_facecolor("#000000")  
-        fig.patch.set_facecolor("#1E90FF")  
-
-        plt.gcf().autofmt_xdate()  
-        plt.tight_layout()
-
+        ax.set_xlabel("Date", fontsize=14, color='white', labelpad=15)
+        ax.set_ylabel("Amount (USD)", fontsize=14, color='white', labelpad=15)
+        
+        ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'${x:,.0f}'))
+        
+        ax.xaxis.set_major_formatter(mdates.DateFormatter('%d/%m/%Y'))
+        plt.xticks(rotation=30, ha='right')
+        
+        legend = ax.legend(facecolor='#000000',
+                         edgecolor='gray',
+                         fontsize=12,
+                         loc='upper left',
+                         bbox_to_anchor=(0.02, 0.98),
+                         framealpha=0.9)
+        plt.setp(legend.get_texts(), color='white')
+        
+        setup_figure_style(fig, ax, "Income and Expenses Over Time")
+        plt.tight_layout(pad=3)
+        
         display_chart(fig, parent)
+        
     except Exception as e:
         logging.error(f"Error plotting line chart: {e}")
 
-def plot_stacked_bar_chart(income_data: list, expense_data: list, parent) -> None:
-    """Plots a stacked bar chart comparing income and expenses by category."""
+def display_chart(fig: Figure, parent) -> None:
     try:
-        fig, ax = plt.subplots(figsize=(12, 6))
-
-        income_categories, income_amounts = zip(*income_data)
-        expense_categories, expense_amounts = zip(*expense_data)
-
-        x = np.arange(len(income_categories))
-        width = 0.35
-
-        ax.bar(x - width / 2, income_amounts, width, label="Income", color="#66b3ff")
-        ax.bar(x + width / 2, expense_amounts, width, label="Expenses", color="#ff9999")
-
-        ax.set_title("Income vs Expenses by Category", fontsize=16, color='white', pad=20, loc='center')
+        for widget in parent.winfo_children():
+            widget.destroy()
         
-    
-        ax.set_xlabel("Category", fontsize=12, color='lightgray')
-        ax.set_ylabel("Amount (USD)", fontsize=12, color='lightgray')
-        ax.set_xticks(x)
-        ax.set_xticklabels(income_categories, rotation=45, ha="right", fontsize=10, color='lightgray')
-
+        canvas = FigureCanvasTkAgg(fig, master=parent)
+        canvas.draw()
         
-        ax.legend()
-        ax.set_facecolor("#000000")  
-        fig.patch.set_facecolor("#1E90FF")  
-
-        plt.tight_layout()
-        display_chart(fig, parent)
+        canvas_widget = canvas.get_tk_widget()
+        canvas_widget.pack(fill="both", expand=True, padx=15, pady=15)
+        
+        def on_resize(event):
+            if abs(event.width - fig.get_size_inches()[0] * fig.dpi) > 50 or \
+               abs(event.height - fig.get_size_inches()[1] * fig.dpi) > 50:
+                width = event.width / fig.dpi
+                height = event.height / fig.dpi
+                fig.set_size_inches(width, height)
+                canvas.draw_idle()
+        
+        canvas_widget.bind('<Configure>', on_resize)
+        
     except Exception as e:
-        logging.error(f"Error plotting stacked bar chart: {e}")
-
-
-
-def display_chart(fig, parent) -> None:
-    """Clears previous chart and displays a new chart."""
-    for widget in parent.winfo_children():
-        widget.destroy()
-
-    canvas = FigureCanvasTkAgg(fig, master=parent)
-    canvas.draw()
-    canvas.get_tk_widget().pack(pady=10, expand=True, fill="both")
-
-
-def create_summary_chart(
-    income_total: float, expense_total: float, savings_total: float, parent
-) -> None:
-    """Creates a summary chart showing total income, expenses, and savings."""
-    try:
-        fig, ax = plt.subplots(figsize=(10, 6))
-
-        categories = ["Income", "Expenses", "Savings"]
-        amounts = [income_total, expense_total, savings_total]
-        colors = ["#66b3ff", "#ff9999", "#99ff99"]
-
-        ax.bar(categories, amounts, color=colors)
-        ax.set_title("Financial Summary")
-        ax.set_ylabel("Amount (USD)")
-
-        for i, v in enumerate(amounts):
-            ax.text(i, v, f"${v:,.2f}", ha="center", va="bottom")
-
-        plt.tight_layout()
-        display_chart(fig, parent)
-    except Exception as e:
-        logging.error(f"Error creating summary chart: {e}")
+        logging.error(f"Error displaying chart: {e}")
+        error_label = ctk.CTkLabel(
+            parent,
+            text=f"Error displaying chart: {str(e)}",
+            text_color="red"
+        )
+        error_label.pack(pady=20)
