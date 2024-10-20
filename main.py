@@ -1,5 +1,5 @@
 import sqlite3
-
+import requests
 import customtkinter as ctk
 
 from src.utils.Components import (
@@ -7,6 +7,7 @@ from src.utils.Components import (
     create_button,
     create_textbox,
     update_textbox,
+    create_dropdown,
 )
 from src.utils.Database import (
     create_or_open_database,
@@ -326,12 +327,17 @@ class BudgetTrackerApp:
             if 'loading_label' in locals():
                 loading_label.destroy()
 
+    # Summary Page 
     def setup_summary_page(self):
         page = self.pages["Summary"]
 
         summary_account_entry = create_labeled_entry(page, "Account Name")
         self.summary_text = create_textbox(page)
 
+        # The create_dropdown function to add a currency selection dropdown
+        currency_options = ["USD", "EUR", "GBP", "INR"]
+        self.currency_var = create_dropdown(page, currency_options, default="USD")
+    
         create_button(
             page,
             "Display Summary",
@@ -343,6 +349,25 @@ class BudgetTrackerApp:
             "Export All Data",
             lambda: self.export_all_data(summary_account_entry.get()),
         )
+        
+    # Currency Conversion
+    def convert_currency(self, amount, from_currency, to_currency):
+        try:
+            # API endpoint for getting the latest rates for the from_currency
+            url = f"https://api.exchangerate-api.com/v4/latest/{from_currency}"
+            response = requests.get(url)
+            response.raise_for_status()
+
+            # Get the conversion rate for the desired currency
+            rates = response.json().get('rates', {})
+            conversion_rate = rates.get(to_currency, 1)
+
+            # Calculate the converted amount
+            converted_amount = round(amount * conversion_rate, 2)
+            return converted_amount
+        except requests.exceptions.RequestException as e:
+            self.show_notification(f"Currency conversion failed: {str(e)}", "error")
+            return amount
 
     def setup_budget_analysis_page(self):
         page = self.pages["Budget Analysis"]
@@ -455,6 +480,7 @@ class BudgetTrackerApp:
         except Exception as e:
             self.show_notification(f"Error displaying chart: {str(e)}", "error")
 
+    # Updated Summary
     def update_summary(self, account_name, summary_text):
         try:
             account_id = get_account_id(self.db, account_name)
@@ -473,10 +499,16 @@ class BudgetTrackerApp:
                 (account_id,),
             )
             total_expenses = cursor.fetchone()[0] or 0
+            
+            selected_currency = self.currency_var.get()
+        
+            converted_income = self.convert_currency(total_income, "USD", selected_currency)
+            converted_expenses = self.convert_currency(total_expenses, "USD", selected_currency)
 
             update_textbox(
                 summary_text,
-                f"Total Income: ${total_income:.2f}\nTotal Expenses: ${total_expenses:.2f}",
+                f"Total Income: {converted_income:.2f} {selected_currency}\n"
+                f"Total Expenses: {converted_expenses:.2f} {selected_currency}"
             )
         except Exception as e:
             self.show_notification(f"Error updating summary: {str(e)}", "error")
