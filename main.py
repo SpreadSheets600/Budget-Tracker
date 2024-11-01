@@ -1,6 +1,7 @@
 import sqlite3
 import requests
 import customtkinter as ctk
+from datetime import datetime
 
 from src.utils.Components import (
     create_labeled_entry,
@@ -100,23 +101,58 @@ class BudgetTrackerApp:
             else:
                 button.configure(state="disabled")
 
+
     def setup_authentication_page(self):
         page = self.pages["User Authentication"]
 
+        # Δημιουργία πεδίων εισαγωγής για το όνομα χρήστη και τον κωδικό πρόσβασης
         username_entry = create_labeled_entry(page, "Username")
         password_entry = create_labeled_entry(page, "Password", show="*")
 
-        create_button(
-            page,
-            "Register",
-            lambda: self.register(username_entry.get(), password_entry.get()),
-        )
-
+        # Κουμπί για σύνδεση
         create_button(
             page,
             "Login",
             lambda: self.login(username_entry.get(), password_entry.get()),
         )
+
+
+        # Κουμπί για εγγραφή που ανοίγει νέο παράθυρο
+        create_button(
+            page,
+            "Register",
+            lambda: self.open_register_window(),  # Κλήση νέας μεθόδου για το παράθυρο εγγραφής
+        )
+
+
+    def open_register_window(self):
+        # Κλείσιμο του κύριου παραθύρου (ή οποιουδήποτε άλλου παραθύρου είναι ανοιχτό)
+
+        self.root.withdraw()
+        # Δημιουργία νέου παραθύρου για το Register
+        self.register_window = ctk.CTkToplevel()  # Δημιουργία του παραθύρου ως ιδιότητα της κλάσης
+        self.register_window.title("Register")
+        self.register_window.geometry("300x200")  # Ρύθμιση μεγέθους παραθύρου
+
+        # Δημιουργία πεδίων για το όνομα χρήστη και τον κωδικό πρόσβασης
+        username_entry = create_labeled_entry(self.register_window, "Username")
+        password_entry = create_labeled_entry(self.register_window, "Password", show="*")
+
+        # Κουμπί εγγραφής στο νέο παράθυρο
+        create_button(
+            self.register_window,
+            "Submit Registration",
+            lambda: self.register(username_entry.get(), password_entry.get())
+        )
+
+        # Ορισμός ενέργειας για την καταστροφή του παραθύρου όταν κλείνει
+        self.register_window.protocol("WM_DELETE_WINDOW", lambda: self.close_register_window())
+
+    def close_register_window(self):
+        # Κλείσιμο του παραθύρου εγγραφής και απομάκρυνση της αναφοράς
+        if hasattr(self, 'register_window'):
+            self.register_window.destroy()
+            del self.register_window
 
     def setup_income_page(self):
         page = self.pages["Income"]
@@ -124,7 +160,8 @@ class BudgetTrackerApp:
         income_account_entry = create_labeled_entry(page, "Account Name")
         income_category_entry = create_labeled_entry(page, "Category")
         income_amount_entry = create_labeled_entry(page, "Amount")
-        income_date_entry = create_labeled_entry(page, "Date (YYYY-MM-DD)")
+        #income_date_entry = create_labeled_entry(page, "Date (YYYY-MM-DD)")
+        current_date = datetime.now().strftime("%d/%m/%Y")
 
         create_button(
             page,
@@ -133,7 +170,7 @@ class BudgetTrackerApp:
                 income_account_entry.get(),
                 income_category_entry.get(),
                 income_amount_entry.get(),
-                income_date_entry.get(),
+                current_date,
             ),
         )
 
@@ -143,7 +180,8 @@ class BudgetTrackerApp:
         expense_account_entry = create_labeled_entry(page, "Account Name")
         expense_category_entry = create_labeled_entry(page, "Category")
         expense_amount_entry = create_labeled_entry(page, "Amount")
-        expense_date_entry = create_labeled_entry(page, "Date (YYYY-MM-DD)")
+        #expense_date_entry = create_labeled_entry(page, "Date (YYYY-MM-DD)")
+        current_date = datetime.now().strftime("%d/%m/%Y")
 
         create_button(
             page,
@@ -152,7 +190,7 @@ class BudgetTrackerApp:
                 expense_account_entry.get(),
                 expense_category_entry.get(),
                 expense_amount_entry.get(),
-                expense_date_entry.get(),
+                current_date,
             ),
         )
 
@@ -400,6 +438,8 @@ class BudgetTrackerApp:
         try:
             create_user_account(self, self.db, username, password)
             self.show_notification("Registration successful!", "success")
+            self.register_window.destroy()
+            self.root.deiconify()
         except ValueError as ve:
             self.show_notification(str(ve), "error")
         except RuntimeError as re:
