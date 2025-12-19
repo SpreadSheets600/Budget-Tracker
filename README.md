@@ -27,7 +27,7 @@ This project is a part of Hacktoberfest, and we're welcoming contributions! Whet
 ### Installation
 1. Clone the repository:
    ```bash
-   git clone https://github.com/your-github-username/budget-tracker.git
+   git clone https://github.com/SpreadSheets600/Budget-Tracker.git
    ```
 2. Install the necessary dependencies:
    ```bash
